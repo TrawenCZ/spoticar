@@ -2,6 +2,7 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
+import SpotifyIcon from "../../public/spotify.svg";
 
 export default function ProfileCard() {
   const session = useSession();
@@ -51,7 +52,7 @@ export default function ProfileCard() {
             </li>
             <li className="mt-4">
               <button className="btn btn-error" onClick={() => signOut()}>
-                Sign Out
+                <a className="mt-2">Sign Out</a>
               </button>
             </li>
           </ul>
@@ -60,8 +61,15 @@ export default function ProfileCard() {
     );
   }
   return (
-    <button className="btn btn-primary" onClick={() => signIn()}>
-      Sign In
+    <button className="btn btn-primary" onClick={() => signIn("spotify")}>
+      <div className="flex flex-col">
+        {" "}
+        Sign In{" "}
+        <div className="flex flex-row justify-end font-light h-3 mt-1">
+          <a className="mr-1">with</a>
+          <SpotifyIcon />
+        </div>
+      </div>
     </button>
   );
 }

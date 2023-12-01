@@ -7,7 +7,6 @@ const spotifyScope =
     user-read-private";
 
 export default NextAuth({
-  // Configure one or more authentication providers
   providers: [
     SpotifyProvider({
       clientId: process.env.SPOTIFY_CLIENT_ID!,
@@ -19,4 +18,18 @@ export default NextAuth({
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, account }) {
+      if (account?.access_token) {
+        token.access_token = account?.access_token;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session && token?.access_token) {
+        session.user.token = token.access_token;
+      }
+      return session;
+    },
+  },
 });

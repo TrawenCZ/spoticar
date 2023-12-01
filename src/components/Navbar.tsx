@@ -5,16 +5,19 @@ import ExpandMoreIcon from "@material-symbols/svg-400/outlined/expand_more-fill.
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import ProfileCard from "./ProfileCard";
+import WebPlayback from "./WebPlayback";
 
 export default function NavBar() {
   const [show, setShow] = useState(true);
-  const authenticated = useSession().status === "authenticated";
+  const session = useSession();
+  const authenticated = session.status === "authenticated";
   return (
     <>
       <div className="flex flex-col justify-center w-full">
         {show && (
           <div className="navbar bg-base-100 justify-end">
             <ProfileCard />
+            {authenticated && <WebPlayback token={session.data?.user.token} />}
           </div>
         )}
 
