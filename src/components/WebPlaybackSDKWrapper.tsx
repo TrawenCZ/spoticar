@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { WebPlaybackSDK } from "react-spotify-web-playback-sdk";
-import PlaybackController from "./WebPlayback";
+import PlaybackController from "./PlaybackController";
 
 export const MySpotifyPlayerWrapper: React.FC<{ token: string }> = ({
   token,
