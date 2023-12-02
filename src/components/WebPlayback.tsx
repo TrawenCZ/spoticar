@@ -1,3 +1,10 @@
+import Loading from "@/app/loading";
+import {
+  AvailableDevicesResponse,
+  EmptyRequest,
+  TransferPlaybackRequest,
+} from "@/utils/api-types";
+import { getFetcher, putFetcher } from "@/utils/fetcher";
 import ErrorIcon from "@material-symbols/svg-400/outlined/error-fill.svg";
 import PauseIcon from "@material-symbols/svg-400/outlined/pause.svg";
 import PlayIcon from "@material-symbols/svg-400/outlined/play_arrow.svg";
@@ -15,9 +22,14 @@ const track = {
 
 function WebPlayback({ token }: { token: string | undefined }) {
   const [is_paused, setPaused] = useState(false);
-  const [is_active, setActive] = useState(false);
+  const [player_isActive, setPlayer_isActive] = useState(false);
+  const [apiSetup_isActive, setApiSetup_isActive] = useState(false);
   const [player, setPlayer] = useState<Spotify.Player | null>(null);
   const [current_track, setTrack] = useState(track);
+  const [error, setError] = useState<string | null>(null);
+
+  const deviceName = "Audio Racing";
+  console.log("Bearer " + token);
 
   if (!token) {
     return (
@@ -39,7 +51,7 @@ function WebPlayback({ token }: { token: string | undefined }) {
 
     window.onSpotifyWebPlaybackSDKReady = () => {
       const player = new window.Spotify.Player({
-        name: "Web Playback SDK",
+        name: deviceName,
         getOAuthToken: (cb) => {
           cb(token);
         },
@@ -65,7 +77,13 @@ function WebPlayback({ token }: { token: string | undefined }) {
         setPaused(state.paused);
 
         player.getCurrentState().then((state) => {
-          !state ? setActive(false) : setActive(true);
+          if (!state) {
+            console.error(
+              "User is not playing music through the Web Playback SDK"
+            );
+            return;
+          }
+          console.log(state);
         });
       });
 
@@ -73,22 +91,56 @@ function WebPlayback({ token }: { token: string | undefined }) {
     };
   }, []);
 
-  if (!is_active || !player) {
-    return (
-      <>
-        <div className="container">
-          <div className="main-wrapper">
-            <b>
-              {" "}
-              Instance not active. Transfer your playback using your Spotify app{" "}
-            </b>
-          </div>
-        </div>
-      </>
+  useEffect(() => {
+    if (!player || !token || !player_isActive || apiSetup_isActive) {
+      return;
+    }
+    getFetcher<AvailableDevicesResponse>("/me/player/devices", token).then(
+      (devices) => {
+        const device_id = devices.success
+          ? devices.data.devices.find((device) => device.name === deviceName)
+              ?.id
+          : undefined;
+        if (
+          !devices.success ||
+          devices.data.devices.length === 0 ||
+          !device_id
+        ) {
+          setError("Something went wrong, audio device missing.");
+          return;
+        }
+
+        const transfer = putFetcher<TransferPlaybackRequest>(
+          "/me/player",
+          token,
+          { device_ids: [device_id] }
+        ).then((transfer) => {
+          if (!transfer.success) {
+            setError(
+              "Something went wrong, audio couldn't be transfered to this device."
+            );
+            return;
+          }
+          setApiSetup_isActive(true);
+        });
+      }
     );
-  } else {
-    return (
-      <>
+  }, [player_isActive]);
+  if (!player && player_isActive) {
+    setError("Something went wrong, Spotify player unavailable.");
+  }
+  if (!player_isActive || !apiSetup_isActive) {
+    return <Loading />;
+  }
+  return (
+    <>
+      {error && (
+        <div role="alert" className="alert alert-error">
+          <ErrorIcon />
+          <span>Something went wrong, Spotify player unavailable.</span>
+        </div>
+      )}
+      {!error && (
         <div className="container">
           <div className="main-wrapper">
             <img
@@ -105,7 +157,9 @@ function WebPlayback({ token }: { token: string | undefined }) {
 
               <button
                 className="btn btn-ghost"
-                onClick={() => player.previousTrack()}
+                onClick={() =>
+                  putFetcher<EmptyRequest>("/me/player/previous", token, {})
+                }
               >
                 <SkipPreviousIcon />
               </button>
@@ -113,23 +167,27 @@ function WebPlayback({ token }: { token: string | undefined }) {
               <button
                 className="btn btn-ghost"
                 id="togglePlay"
-                onClick={() => player.togglePlay()}
+                onClick={() =>
+                  putFetcher<EmptyRequest>("/me/player/play", token, {})
+                }
               >
                 {is_paused ? <PlayIcon /> : <PauseIcon />}
               </button>
 
               <button
                 className="btn btn-ghost"
-                onClick={() => player.nextTrack()}
+                onClick={() =>
+                  putFetcher<EmptyRequest>("/me/player/next", token, {})
+                }
               >
                 <SkipNextIcon />
               </button>
             </div>
           </div>
         </div>
-      </>
-    );
-  }
+      )}
+    </>
+  );
 }
 
 export default WebPlayback;

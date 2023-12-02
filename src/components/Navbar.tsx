@@ -11,13 +11,18 @@ export default function NavBar() {
   const [show, setShow] = useState(true);
   const session = useSession();
   const authenticated = session.status === "authenticated";
+
   return (
     <>
       <div className="flex flex-col justify-center w-full">
         {show && (
           <div className="navbar bg-base-100 justify-end">
             <ProfileCard />
-            {authenticated && <WebPlayback token={session.data?.user.token} />}
+            {authenticated && (
+              <iframe sandbox="allow-scripts">
+                <WebPlayback token={session.data?.user.token?.access_token} />
+              </iframe>
+            )}
           </div>
         )}
 
