@@ -23,7 +23,7 @@ declare module "next-auth/jwt" {
    *
    * [`jwt` callback](https://next-auth.js.org/configuration/callbacks#jwt-callback) | [`getToken`](https://next-auth.js.org/tutorials/securing-pages-and-api-routes#using-gettoken)
    */
-  interface JWT {
+  interface JWT extends DefaultJWT {
     /** Oauth access token */
     access_token: string | undefined;
     expires_at: number | undefined;

@@ -14,4 +14,4 @@ export type AvailableDevicesResponse = {
   }[];
 };
 
-export type TransferPlaybackRequest = { device_ids: string[] };
+export type TransferPlaybackRequest = { device_ids: string[]; play: boolean };

@@ -24,11 +24,10 @@ export default NextAuth({
   ],
   callbacks: {
     async jwt({ token, account }) {
-      console.log("acc", account);
-      console.log("tok", token);
       if (account) {
         // Save the access token and refresh token in the JWT on the initial login
         return {
+          ...token,
           access_token: account.access_token,
           expires_at: account.expires_at,
           refresh_token: account.refresh_token,
@@ -85,4 +84,5 @@ export default NextAuth({
       return session;
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
 });

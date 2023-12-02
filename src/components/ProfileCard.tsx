@@ -1,11 +1,14 @@
 "use client";
 
+import Loading from "@/app/loading";
+import SignOutIcon from "@material-symbols/svg-400/outlined/logout.svg";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import SpotifyIcon from "../../public/spotify.svg";
 
 export default function ProfileCard() {
   const session = useSession();
+  if (session.status === "loading") return <Loading />;
   if (session.status === "authenticated") {
     return (
       <>
@@ -51,8 +54,18 @@ export default function ProfileCard() {
               <a className="font-thin">{session.data.user?.email}</a>
             </li>
             <li className="mt-4">
-              <button className="btn btn-error" onClick={() => signOut()}>
-                <a className="mt-2">Sign Out</a>
+              <button
+                className="btn btn-error flex flex-row align-middle justify-center"
+                onClick={() => signOut()}
+              >
+                <SignOutIcon
+                  style={{
+                    width: "2rem",
+                    height: "2rem",
+                    "margin-top": "0.25rem",
+                  }}
+                />
+                <a className="mt-1">Sign Out</a>
               </button>
             </li>
           </ul>
