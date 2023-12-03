@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@material-symbols/svg-400": "^0.14.1",
+    "@p5-wrapper/next": "^0.2.0",
+    "@p5-wrapper/react": "^4.3.0",
     "@types/p5": "^1.7.4",
     "@types/spotify-web-playback-sdk": "^0.1.19",
     "axios": "^1.6.2",

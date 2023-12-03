@@ -1,4 +1,5 @@
 import NavBar from "@/components/Navbar";
+import TestingSketch from "@/components/TestingSketch";
 import { IsClientCtxProvider } from "@/components/providers/IsClientProvider";
 import NextSessionProvider from "@/components/providers/SessionProvider";
 
@@ -8,9 +9,9 @@ export default function Home() {
       <NextSessionProvider>
         <IsClientCtxProvider>
           <NavBar />
+          <TestingSketch />
         </IsClientCtxProvider>
       </NextSessionProvider>
-      <iframe src="/sketch/test" width={600} height={600} />
     </main>
   );
 }

@@ -46,7 +46,6 @@ function loadHandlers(id: string) {
 
 function loadP5() {
   void import("p5").then((mod) => (window.p5 = mod.default));
-  void import("p5").then((mod) => (window.AudioIn = mod.AudioIn));
 
   return cleanup;
 }

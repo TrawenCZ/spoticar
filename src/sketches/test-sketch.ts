@@ -5,9 +5,15 @@ export async function setup() {
   console.log("setup");
   createCanvas(600, 600);
   frameRate(60);
+
   if (typeof window !== "undefined") {
-    console.log("AudioIn", window.AudioIn);
-    const mic = new window.AudioIn();
+    console.log("AudioIn", p5.constructor);
+    const soundLib = await import("p5/lib/addons/p5.sound");
+    (p5.constructor.getAudioContext() as AudioContext).suspend();
+    console.log("soundLib", soundLib);
+    console.log("p5audi", p5.constructor.prototype.AudioIn);
+    console.log("soundliAudi", soundLib.constructor.prototype.AudioIn);
+    const mic = new soundLib.constructor.prototype.AudioIn();
     mic.start();
   }
 }
