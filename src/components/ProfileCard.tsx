@@ -62,7 +62,7 @@ export default function ProfileCard() {
                   style={{
                     width: "2rem",
                     height: "2rem",
-                    "margin-top": "0.25rem",
+                    marginTop: "0.25rem",
                   }}
                 />
                 <a className="mt-1">Sign Out</a>
