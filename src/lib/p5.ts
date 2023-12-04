@@ -1,3 +1,4 @@
+/*
 import React from "react";
 
 import * as test from "@/sketches/test-sketch";
@@ -54,3 +55,4 @@ export function useSketch(id: string) {
   React.useEffect(() => loadHandlers(id), [id]);
   React.useEffect(() => loadP5(), []);
 }
+*/

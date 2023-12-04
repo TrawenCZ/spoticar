@@ -1,3 +1,4 @@
+/*
 let angle = 0;
 let hue = 0;
 
@@ -37,3 +38,4 @@ export function draw() {
   hue += 4;
   hue %= 360;
 }
+*/

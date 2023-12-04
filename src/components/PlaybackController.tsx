@@ -33,7 +33,7 @@ export default function PlaybackController({ token }: { token: string }) {
       device_ids: [device.device_id],
       play: false,
     });
-  }, [device?.device_id]);
+  }, [device?.device_id, token]);
 
   if (!player || !state) return <Loading />;
 
