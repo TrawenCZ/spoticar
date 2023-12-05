@@ -10,11 +10,10 @@ dotenv.config();
 assert(process.env.CLIENT_ID, "CLIENT_ID is not defined");
 assert(process.env.CLIENT_SECRET, "CLIENT_SECRET is not defined");
 
-const PORT = process.env.PORT || 6969;
+const PORT = process.env.PORT || 3000;
 const client_id = process.env.CLIENT_ID!;
 const client_secret = process.env.CLIENT_SECRET!;
-const redirect_uri =
-  process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
+const redirect_uri = process.env.REDIRECT_URI || `http://localhost:${PORT}`;
 
 const scope =
   "streaming \
@@ -51,7 +50,13 @@ api.get("/login", (req, res) => {
   );
 });
 
-api.get("/callback", async (req, res) => {
+api.get("/logout", (req, res) => {
+  curr_access_token = null;
+  curr_refresh_token = null;
+  res.redirect("/");
+});
+
+api.get("/", async (req, res) => {
   const code = req.query.code?.toString();
   const { state } = req.query;
 
@@ -114,4 +119,8 @@ api.get("/callback", async (req, res) => {
     accessToken: access_token,
     expiryTime: Date.now() + expires_in * 1000,
   });
+});
+
+api.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
 });

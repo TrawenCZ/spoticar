@@ -1,5 +1,3 @@
-"use client";
-
 import Loading from "@/components/LoadingAnimation";
 import SignOutIcon from "@material-symbols/svg-400/outlined/logout.svg";
 import SpotifyIcon from "../../public/spotify.svg";
