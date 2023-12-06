@@ -1,17 +1,19 @@
 import { ReactComponent as SignOutIcon } from "@material-symbols/svg-400/outlined/logout.svg";
+import { useNavigate } from "react-router-dom";
 import { ReactComponent as SpotifyIcon } from "../static/spotify.svg";
 import Loading from "./LoadingAnimation";
 import { useSession } from "./providers/SessionProvider";
 
 export default function ProfileCard() {
-  const { session } = useSession();
+  const { session, setSession } = useSession();
+  const navigate = useNavigate();
 
   if (session.status === "loading") return <Loading />;
 
   if (session.status === "authenticated") {
     return (
       <>
-        <div className="dropdown dropdown-end">
+        <div className="dropdown dropdown-end text-base-content">
           {session.avatar ? (
             <div
               className="flex flex-col items-center justify-center btn btn-ghost btn-circle"
@@ -42,22 +44,12 @@ export default function ProfileCard() {
             <li>
               <a className="font-extrabold">{session.name}</a>
             </li>
-            <li>
-              <a className="font-thin">{session.email}</a>
-            </li>
             <li className="mt-4">
               <a
                 href="/logout"
                 className="btn btn-error flex flex-row align-middle justify-center"
               >
-                <SignOutIcon
-                  style={{
-                    width: "2rem",
-                    height: "2rem",
-                    marginTop: "0.25rem",
-                  }}
-                />
-                <a className="mt-1">Sign Out</a>
+                <SignOutIcon height={40} width={40} />
               </a>
             </li>
           </ul>
@@ -70,11 +62,11 @@ export default function ProfileCard() {
       {" "}
       <a href="/login" className="btn btn-primary">
         Sign In{" "}
+        <div className="flex flex-row justify-end font-light h-3 mt-1">
+          <a className="mr-1">with</a>
+          <SpotifyIcon />
+        </div>
       </a>
-      <div className="flex flex-row justify-end font-light h-3 mt-1">
-        <a className="mr-1">with</a>
-        <SpotifyIcon />
-      </div>
     </div>
   );
 }

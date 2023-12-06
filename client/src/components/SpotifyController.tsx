@@ -41,11 +41,12 @@ export default function PlaybackController({ token }: { token: string }) {
         </div>
       )}
       {!error && (
-        <div className="card card-side bg-base-200 shadow-xl">
-          <figure>
+        <div className="card card-side bg-base-200 shadow-xl ml-5 max-h-[7.5rem]">
+          <figure className="max-h-full aspect-square max-w-[7.5rem]">
             <img
               src={state.track_window.current_track.album.images[0].url}
               alt="Track cover"
+              className="object-contain max-h-full"
             />
           </figure>
 
@@ -67,12 +68,12 @@ export default function PlaybackController({ token }: { token: string }) {
                 )}
               </div>
 
-              <div className="card-actions justify-center mt-4">
+              <div className="card-actions justify-center align-middle mt-1">
                 <button
                   className="btn btn-ghost"
                   onClick={() => player.previousTrack()}
                 >
-                  <SkipPreviousIcon />
+                  <SkipPreviousIcon height="25" width="25" />
                 </button>
 
                 <button
@@ -80,14 +81,18 @@ export default function PlaybackController({ token }: { token: string }) {
                   id="togglePlay"
                   onClick={() => player.togglePlay()}
                 >
-                  {state.paused ? <PlayIcon /> : <PauseIcon />}
+                  {state.paused ? (
+                    <PlayIcon height="25" width="25" />
+                  ) : (
+                    <PauseIcon height="25" width="25" />
+                  )}
                 </button>
 
                 <button
                   className="btn btn-ghost"
                   onClick={() => player.nextTrack()}
                 >
-                  <SkipNextIcon />
+                  <SkipNextIcon height="25" width="25" />
                 </button>
               </div>
             </div>

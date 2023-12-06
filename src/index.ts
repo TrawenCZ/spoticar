@@ -39,6 +39,15 @@ let curr_state: string | null = null;
 
 const api = express();
 
+api.use(function (req, res, next) {
+  if (req.path.slice(-1) === "/" && req.path.length > 1) {
+    let query = req.url.slice(req.path.length);
+    res.redirect(301, req.path.slice(0, -1) + query);
+  } else {
+    next();
+  }
+});
+
 api.use(express.json());
 
 api.use(cors());
@@ -61,7 +70,7 @@ api.get("/login", (req, res) => {
 api.get("/logout", (req, res) => {
   curr_session = null;
   curr_refresh_token = null;
-  res.redirect("/");
+  res.redirect("/trigger_refresh");
 });
 
 api.get("/callback", async (req, res) => {

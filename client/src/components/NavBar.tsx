@@ -26,26 +26,24 @@ export default function NavBar() {
     <>
       <div className="flex flex-col justify-center w-full">
         <div
-          className={`navbar bg-base-200 justify-between ${
+          className={`navbar bg-base-200 justify-between backdrop-blur-sm bg-opacity-25 max-h-32 ${
             show ? "" : "hidden"
           }`}
         >
-          {authenticated && (
-            <div className="ml-5">
-              <MySpotifyPlayerWrapper />
-            </div>
-          )}
+          {authenticated && <MySpotifyPlayerWrapper />}
           <div className="mr-5">
             <ProfileCard />
           </div>
         </div>
 
-        <button
-          className="btn btn-ghost place-self-center"
-          onClick={() => setShow((val) => !val)}
-        >
-          {show ? authenticated ? <ExpandLessIcon /> : "" : <ExpandMoreIcon />}
-        </button>
+        {(authenticated || !show) && (
+          <button
+            className="btn btn-ghost place-self-center"
+            onClick={() => setShow((val) => !val)}
+          >
+            {show ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </button>
+        )}
       </div>
     </>
   );

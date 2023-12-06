@@ -8,18 +8,31 @@ const SessionContext = createContext<{
 
 export const SessionProvider = ({
   children,
-  initSession = null,
 }: {
   children: React.ReactNode;
-  initSession: Session | null;
 }) => {
+  const existingSession = localStorage.getItem("SpotifySession")
+    ? JSON.parse(localStorage.getItem("SpotifySession")!)
+    : null;
+  const sessionIsValid =
+    existingSession &&
+    existingSession.status === "authenticated" &&
+    existingSession.accessToken &&
+    existingSession.expiresAt &&
+    existingSession.avatar &&
+    existingSession.name &&
+    existingSession.expiresAt > Date.now();
   const [session, setSessionFromInside] = useState<Session>(
-    initSession ?? {
-      status: "unauthenticated",
-    }
+    sessionIsValid
+      ? existingSession
+      : {
+          status: "unauthenticated",
+        }
   );
-  const voidSetter = (session: Session) => {
-    setSessionFromInside(session);
+
+  const voidSetter = (newSession: Session) => {
+    localStorage.setItem("SpotifySession", JSON.stringify(newSession));
+    setSessionFromInside(newSession);
   };
   return (
     <SessionContext.Provider
