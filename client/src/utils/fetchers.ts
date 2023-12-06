@@ -1,5 +1,4 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
-import path from "path";
 
 const responseHandler = <T>(
   response: Promise<AxiosResponse<T, any>>
@@ -24,7 +23,10 @@ const responseHandler = <T>(
 };
 
 const domainAdder = (urlSlug: string) =>
-  path.join("https://api.spotify.com/v1", urlSlug);
+  `https://api.spotify.com/v1${urlSlug.startsWith("/") ? "" : "/"}${urlSlug}`;
+
+const expressDomainAdder = (urlSlug: string) =>
+  `http://localhost:3000${urlSlug.startsWith("/") ? "" : "/"}${urlSlug}`;
 
 export const getFetcher = <T>(urlSlug: string, accessToken: string) =>
   responseHandler(
@@ -46,3 +48,21 @@ export const postFetcher = <T>(urlSlug: string, accessToken: string, data: T) =>
       headers: { Authorization: "Bearer " + accessToken },
     })
   );
+
+export const getFetcherForExpress = <T>(
+  urlSlug: string
+): Promise<{ status: "success"; data: T } | { status: "error"; data: any }> => {
+  return axios
+    .get<T>(expressDomainAdder(urlSlug))
+    .then(
+      (res) =>
+        ({ status: "success", data: res.data } as {
+          status: "success";
+          data: T;
+        })
+    )
+    .catch((err) => {
+      console.log(err);
+      return { status: "error", data: err };
+    });
+};

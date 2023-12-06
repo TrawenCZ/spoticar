@@ -1,11 +1,8 @@
-import Loading from "@/components/LoadingAnimation";
-import { putFetcher } from "@/utils/fetchers";
-import { TransferPlaybackRequest } from "@/utils/types/spotify-api";
-import ErrorIcon from "@material-symbols/svg-400/outlined/error-fill.svg";
-import PauseIcon from "@material-symbols/svg-400/outlined/pause.svg";
-import PlayIcon from "@material-symbols/svg-400/outlined/play_arrow.svg";
-import SkipNextIcon from "@material-symbols/svg-400/outlined/skip_next.svg";
-import SkipPreviousIcon from "@material-symbols/svg-400/outlined/skip_previous.svg";
+import { ReactComponent as ErrorIcon } from "@material-symbols/svg-400/outlined/error-fill.svg";
+import { ReactComponent as PauseIcon } from "@material-symbols/svg-400/outlined/pause.svg";
+import { ReactComponent as PlayIcon } from "@material-symbols/svg-400/outlined/play_arrow.svg";
+import { ReactComponent as SkipNextIcon } from "@material-symbols/svg-400/outlined/skip_next.svg";
+import { ReactComponent as SkipPreviousIcon } from "@material-symbols/svg-400/outlined/skip_previous.svg";
 import { useEffect } from "react";
 import {
   useErrorState,
@@ -13,8 +10,9 @@ import {
   usePlayerDevice,
   useSpotifyPlayer,
 } from "react-spotify-web-playback-sdk";
-
-const deviceName = "Audio Racing";
+import { putFetcher } from "../utils/fetchers";
+import { TransferPlaybackRequest } from "../utils/types/spotify-api";
+import Loading from "./LoadingAnimation";
 
 export default function PlaybackController({ token }: { token: string }) {
   const player = useSpotifyPlayer();

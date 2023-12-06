@@ -5,8 +5,6 @@ export type Session =
       email: string;
       avatar: string;
       accessToken: string;
-      expiryTime: number;
-      getNewAccessToken: () => Promise<void>;
-      getNewAccessTokenIfExpired: () => Promise<void>;
+      expiresAt: number;
     }
   | { status: "unauthenticated" };

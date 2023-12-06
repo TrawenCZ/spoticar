@@ -1,10 +1,10 @@
 import { Session } from "@/utils/types/session";
 import React, { createContext, useContext, useState } from "react";
 
-const SessionContext = createContext<Session>({ status: "unauthenticated" });
-const [session, setSessionFromInside] = useState<Session>({
-  status: "unauthenticated",
-});
+const SessionContext = createContext<{
+  session: Session;
+  setSession: (_: Session) => void;
+}>({ session: { status: "unauthenticated" }, setSession: (_: Session) => {} });
 
 export const SessionProvider = ({
   children,
@@ -13,11 +13,18 @@ export const SessionProvider = ({
   children: React.ReactNode;
   initSession: Session | null;
 }) => {
-  if (initSession) {
-    setSession(initSession);
-  }
+  const [session, setSessionFromInside] = useState<Session>(
+    initSession ?? {
+      status: "unauthenticated",
+    }
+  );
+  const voidSetter = (session: Session) => {
+    setSessionFromInside(session);
+  };
   return (
-    <SessionContext.Provider value={session}>
+    <SessionContext.Provider
+      value={{ session: session, setSession: voidSetter }}
+    >
       {children}
     </SessionContext.Provider>
   );
@@ -25,8 +32,4 @@ export const SessionProvider = ({
 
 export function useSession() {
   return useContext(SessionContext);
-}
-
-export function setSession(session: Session) {
-  setSessionFromInside(session);
 }

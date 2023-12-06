@@ -4,6 +4,7 @@ import cors from "cors";
 import { randomBytes } from "crypto";
 import dotenv from "dotenv";
 import express from "express";
+import path from "path";
 import querystring from "querystring";
 
 dotenv.config();
@@ -13,7 +14,8 @@ assert(process.env.CLIENT_SECRET, "CLIENT_SECRET is not defined");
 const PORT = process.env.PORT || 3000;
 const client_id = process.env.CLIENT_ID!;
 const client_secret = process.env.CLIENT_SECRET!;
-const redirect_uri = process.env.REDIRECT_URI || `http://localhost:${PORT}`;
+const redirect_uri =
+  process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
 
 const scope =
   "streaming \
@@ -23,7 +25,14 @@ user-read-playback-state \
 user-modify-playback-state \
 user-read-currently-playing";
 
-let curr_access_token: string | null = null;
+let curr_session: {
+  name: string;
+  email: string;
+  avatar: string;
+  accessToken: string;
+  expiresAt: number;
+} | null = null;
+
 let curr_refresh_token: string | null = null;
 let curr_state: string | null = null;
 // please don't have a security heart attack, I will only use this app for myself at localhost
@@ -32,7 +41,6 @@ const api = express();
 
 api.use(express.json());
 
-api.use("/", express.static("client/dist"));
 api.use(cors());
 
 api.get("/login", (req, res) => {
@@ -51,12 +59,12 @@ api.get("/login", (req, res) => {
 });
 
 api.get("/logout", (req, res) => {
-  curr_access_token = null;
+  curr_session = null;
   curr_refresh_token = null;
   res.redirect("/");
 });
 
-api.get("/", async (req, res) => {
+api.get("/callback", async (req, res) => {
   const code = req.query.code?.toString();
   const { state } = req.query;
 
@@ -101,8 +109,7 @@ api.get("/", async (req, res) => {
     method: "GET",
     headers: { Authorization: `Bearer ${access_token}` },
   });
-  curr_access_token = access_token;
-  curr_refresh_token = refresh_token;
+
   if (!email || !images[0]?.url || !display_name) {
     return res.status(404).redirect(
       "/#" +
@@ -111,14 +118,84 @@ api.get("/", async (req, res) => {
         })
     );
   }
-
-  return res.json({
+  curr_session = {
     name: display_name,
     email: email,
     avatar: images[0].url,
     accessToken: access_token,
-    expiryTime: Date.now() + expires_in * 1000,
+    expiresAt: Date.now() + expires_in * 1000,
+  };
+  curr_refresh_token = refresh_token;
+
+  return res.redirect("/trigger_refresh");
+});
+
+api.get("/session", (req, res) => {
+  if (!curr_session) {
+    return res.json({ status: "unauthenticated" });
+  }
+  return res.json({ status: "authenticated", ...curr_session });
+});
+
+api.get("/refresh_session", async (req, res) => {
+  if (!curr_refresh_token) {
+    return res.status(404).redirect(
+      "/#" +
+        querystring.stringify({
+          error: "no_refresh_token",
+        })
+    );
+  }
+  const {
+    data: { access_token, expires_in },
+  } = await axios({
+    method: "post",
+    url: "https://accounts.spotify.com/api/token",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    data: querystring.stringify({
+      refresh_token: curr_refresh_token,
+      grant_type: "refresh_token",
+      client_id: client_id,
+    }),
   });
+  if (!access_token) {
+    return res.status(404).redirect(
+      "/#" +
+        querystring.stringify({
+          error: "no_token",
+        })
+    );
+  }
+  const {
+    data: { email, images, display_name },
+  } = await axios("https://api.spotify.com/v1/me", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
+  if (!email || !images[0]?.url || !display_name) {
+    return res.status(404).redirect(
+      "/#" +
+        querystring.stringify({
+          error: "no_user_data",
+        })
+    );
+  }
+  curr_session = {
+    name: display_name,
+    email: email,
+    avatar: images[0].url,
+    accessToken: access_token,
+    expiresAt: Date.now() + expires_in * 1000,
+  };
+
+  return res.redirect("/");
+});
+
+api.use(express.static(path.join(__dirname, "..", "client", "build")));
+api.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "client", "build", "index.html"));
 });
 
 api.listen(PORT, () => {

@@ -1,11 +1,13 @@
-import Loading from "@/components/LoadingAnimation";
-import SignOutIcon from "@material-symbols/svg-400/outlined/logout.svg";
-import SpotifyIcon from "../../public/spotify.svg";
+import { ReactComponent as SignOutIcon } from "@material-symbols/svg-400/outlined/logout.svg";
+import { ReactComponent as SpotifyIcon } from "../static/spotify.svg";
+import Loading from "./LoadingAnimation";
 import { useSession } from "./providers/SessionProvider";
 
 export default function ProfileCard() {
-  const session = useSession();
+  const { session } = useSession();
+
   if (session.status === "loading") return <Loading />;
+
   if (session.status === "authenticated") {
     return (
       <>
@@ -44,9 +46,9 @@ export default function ProfileCard() {
               <a className="font-thin">{session.email}</a>
             </li>
             <li className="mt-4">
-              <button
+              <a
+                href="/logout"
                 className="btn btn-error flex flex-row align-middle justify-center"
-                onClick={() => signOut()}
               >
                 <SignOutIcon
                   style={{
@@ -56,7 +58,7 @@ export default function ProfileCard() {
                   }}
                 />
                 <a className="mt-1">Sign Out</a>
-              </button>
+              </a>
             </li>
           </ul>
         </div>
@@ -64,15 +66,15 @@ export default function ProfileCard() {
     );
   }
   return (
-    <button className="btn btn-primary" onClick={() => signIn("spotify")}>
-      <div className="flex flex-col">
-        {" "}
+    <div className="flex flex-col">
+      {" "}
+      <a href="/login" className="btn btn-primary">
         Sign In{" "}
-        <div className="flex flex-row justify-end font-light h-3 mt-1">
-          <a className="mr-1">with</a>
-          <SpotifyIcon />
-        </div>
+      </a>
+      <div className="flex flex-row justify-end font-light h-3 mt-1">
+        <a className="mr-1">with</a>
+        <SpotifyIcon />
       </div>
-    </button>
+    </div>
   );
 }
