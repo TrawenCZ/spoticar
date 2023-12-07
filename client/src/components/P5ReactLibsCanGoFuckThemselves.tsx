@@ -31,45 +31,6 @@ class SketchBody extends React.Component {
     let NUM_RINGS = 7;
     let RING_GROWTH_RATE = 20;
 
-    let colorPalettes = [
-      [
-        p.color("#F94144"),
-        p.color("#F3722C"),
-        p.color("#F8961E"),
-        p.color("#F9C74F"),
-        p.color("#90BE6D"),
-        p.color("#43AA8B"),
-        p.color("#577590"),
-      ],
-      [
-        p.color("#577590"),
-        p.color("#43AA8B"),
-        p.color("#90BE6D"),
-        p.color("#F9C74F"),
-        p.color("#F8961E"),
-        p.color("#F3722C"),
-        p.color("#F94144"),
-      ],
-      [
-        p.color("#D7D9B1"),
-        p.color("#84ACCE"),
-        p.color("#827191"),
-        p.color("#7D1D3F"),
-        p.color("#512500"),
-        p.color("#092327"),
-        p.color("#0B5351"),
-      ],
-      [
-        p.color("#0B5351"),
-        p.color("#092327"),
-        p.color("#512500"),
-        p.color("#7D1D3F"),
-        p.color("#827191"),
-        p.color("#84ACCE"),
-        p.color("#D7D9B1"),
-      ],
-    ];
-
     // Loads the music file into p5.js to play on click
     p.preload = () => {
       p.soundFormats("mp3");
@@ -116,7 +77,7 @@ class SketchBody extends React.Component {
   }
 
   render() {
-    return <div>hovon</div>;
+    return <div></div>;
   }
 }
 
