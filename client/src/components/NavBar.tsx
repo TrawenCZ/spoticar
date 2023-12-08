@@ -26,7 +26,7 @@ export default function NavBar() {
     <>
       <div className="flex flex-col justify-center w-full">
         <div
-          className={`navbar bg-base-200 justify-between backdrop-blur-sm bg-opacity-25 max-h-32 ${
+          className={`navbar bg-base-200 justify-between backdrop-blur-sm bg-opacity-25 max-h-32 shadow-md ${
             show ? "" : "hidden"
           }`}
         >

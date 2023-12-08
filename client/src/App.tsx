@@ -1,13 +1,13 @@
 import { useState } from "react";
 import "./App.css";
 import NavBar from "./components/NavBar";
-import SketchBody from "./components/P5ReactLibsCanGoFuckThemselves";
+import SketchBody from "./components/SketchBody";
 
 function App() {
   const [userInteractedWithPage, setUserInteractedWithPage] = useState(false);
 
   return (
-    <div className="App">
+    <div className="App fixed z-10 w-[100vw]">
       <NavBar />
       {!userInteractedWithPage && (
         <button
@@ -17,7 +17,12 @@ function App() {
           Click here to allow audio API
         </button>
       )}
-      {userInteractedWithPage && <SketchBody />}
+      {userInteractedWithPage && (
+        <div className="fixed left-0 top-0">
+          {" "}
+          <SketchBody />
+        </div>
+      )}
     </div>
   );
 }
