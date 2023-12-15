@@ -5,6 +5,7 @@ import { ReactComponent as ExpandLessIcon } from "@material-symbols/svg-400/outl
 import { ReactComponent as ExpandMoreIcon } from "@material-symbols/svg-400/outlined/expand_more-fill.svg";
 import { useState } from "react";
 import ProfileCard from "./ProfileCard";
+import SongFinder from "./SongFinder";
 import { MySpotifyPlayerWrapper } from "./SpotifySDKWrapper";
 import { useSession } from "./providers/SessionProvider";
 
@@ -30,7 +31,11 @@ export default function NavBar() {
             show ? "" : "hidden"
           }`}
         >
-          {authenticated && <MySpotifyPlayerWrapper />}
+          {authenticated && (
+            <>
+              <MySpotifyPlayerWrapper /> <SongFinder />
+            </>
+          )}
           <div className="mr-5">
             <ProfileCard />
           </div>

@@ -35,6 +35,24 @@ export const getFetcher = <T>(urlSlug: string, accessToken: string) =>
     })
   );
 
+export const getFetcherWithQuery = <T>(
+  urlSlug: string,
+  accessToken: string,
+  query: string,
+  controller?: AbortController
+) =>
+  responseHandler(
+    axios.get<T>(domainAdder(urlSlug), {
+      signal: controller?.signal,
+      headers: { Authorization: "Bearer " + accessToken },
+      params: {
+        q: query,
+        type: "track",
+        limit: 10,
+      },
+    })
+  );
+
 export const putFetcher = <T>(urlSlug: string, accessToken: string, data: T) =>
   responseHandler(
     axios.put(domainAdder(urlSlug), data, {
@@ -47,6 +65,24 @@ export const postFetcher = <T>(urlSlug: string, accessToken: string, data: T) =>
     axios.post(domainAdder(urlSlug), data, {
       headers: { Authorization: "Bearer " + accessToken },
     })
+  );
+
+export const postFetcherWithParams = <T>(
+  urlSlug: string,
+  accessToken: string,
+  params: Object
+) =>
+  responseHandler(
+    axios.post<T>(
+      domainAdder(urlSlug),
+      {},
+      {
+        headers: { Authorization: "Bearer " + accessToken },
+        params: {
+          ...params,
+        },
+      }
+    )
   );
 
 export const getFetcherForExpress = <T>(

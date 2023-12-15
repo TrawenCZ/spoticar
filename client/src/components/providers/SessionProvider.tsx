@@ -1,5 +1,5 @@
-import { Session } from "@/utils/types/session";
 import React, { createContext, useContext, useState } from "react";
+import { Session } from "../../utils/types/session";
 
 const SessionContext = createContext<{
   session: Session;

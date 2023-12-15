@@ -1,9 +1,13 @@
 {
   "dependencies": {
+    "@types/b-spline": "^2.0.4",
+    "@types/hull.js": "^1.0.4",
     "axios": "^1.6.2",
+    "b-spline": "^2.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "hull.js": "^1.0.4",
     "query-string": "^8.1.0"
   },
   "name": "audio-racing",

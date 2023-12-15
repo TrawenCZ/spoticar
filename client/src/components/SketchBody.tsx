@@ -6,6 +6,8 @@ import * as p5 from "p5";
 import "p5/lib/addons/p5.sound";
 // prettier-ignore
 import React from "react";
+// prettier-ignore
+import { audioRacingP5Sketch } from "../visualizers/audio-racing-p5";
 
 class SketchBody extends React.Component {
   myRef: React.RefObject<HTMLDivElement>;
@@ -15,40 +17,41 @@ class SketchBody extends React.Component {
     super({});
     this.myRef = React.createRef();
   }
+  Sketch = audioRacingP5Sketch;
 
-  Sketch = (p: p5) => {
-    let audioInput: p5.AudioIn;
+  // Sketch = (p: p5) => {
+  //   let audioInput: p5.AudioIn;
 
-    p.preload = () => {
-      p.soundFormats("mp3");
-    };
+  //   p.preload = () => {
+  //     p.soundFormats("mp3");
+  //   };
 
-    // Initial setup to create canvas and audio analyzers
-    p.setup = async () => {
-      audioInput = new p5.AudioIn();
-      const virtualInputIndex: number = await audioInput
-        .getSources()
-        .then((devices: InputDeviceInfo[]) =>
-          devices.findIndex((dev) => dev.label.includes("VoiceMeeter Output"))
-        );
+  //   // Initial setup to create canvas and audio analyzers
+  //   p.setup = async () => {
+  //     audioInput = new p5.AudioIn();
+  //     const virtualInputIndex: number = await audioInput
+  //       .getSources()
+  //       .then((devices: InputDeviceInfo[]) =>
+  //         devices.findIndex((dev) => dev.label.includes("VoiceMeeter Output"))
+  //       );
 
-      if (!virtualInputIndex || isNaN(virtualInputIndex)) {
-        alert("Virtual input for Spotify couldn't be found!");
-        return;
-      }
-      audioInput.setSource(virtualInputIndex);
+  //     if (!virtualInputIndex || isNaN(virtualInputIndex)) {
+  //       alert("Virtual input for Spotify couldn't be found!");
+  //       return;
+  //     }
+  //     audioInput.setSource(virtualInputIndex);
 
-      p.createCanvas(p.windowWidth, p.windowHeight);
-    };
+  //     p.createCanvas(p.windowWidth, p.windowHeight);
+  //   };
 
-    p.draw = () => {
-      p.background(0);
-      p.square(0, 0, 400);
-      p.text("FUNGUJE DIVEJ !!!!!!!!!!!!!!", 10, 20);
-    };
+  //   p.draw = () => {
+  //     p.background(0);
+  //     p.square(0, 0, 400);
+  //     p.text("FUNGUJE DIVEJ !!!!!!!!!!!!!!", 10, 20);
+  //   };
 
-    p.windowResized = () => {};
-  };
+  //   p.windowResized = () => {};
+  // };
 
   // React things to make p5.js work properly and not lag when leaving the current page below
   componentDidMount() {
