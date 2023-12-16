@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFetcherWithQuery, postFetcherWithParams } from "../utils/fetchers";
 import { SearchResponse } from "../utils/types/spotify-api";
-import Loading from "./LoadingAnimation";
 import { useSession } from "./providers/SessionProvider";
 
 export default function SongFinder() {
@@ -19,16 +18,15 @@ export default function SongFinder() {
   const [trigger, setTrigger] = useState(false);
 
   useEffect(() => {
-    console.log("wtf");
     if (trigger) {
       const interval = setInterval(() => {
         setSearchResults(null);
         setAddingToQueue({ status: "idle", trackUri: null });
         setSearchValue("");
+        setTrigger(false);
       }, 2500);
       return () => clearInterval(interval);
     }
-    setTrigger(false);
   }, [trigger]);
 
   const abortController = new AbortController();
@@ -90,7 +88,7 @@ export default function SongFinder() {
       <div
         // use classnames here to easily toggle dropdown open
         className={`
-        dropdown w-full
+         ml-auto mr-8 dropdown w-full
         ${searchResults ? " dropdown-open" : ""} max-w-sm
       `}
       >
@@ -113,18 +111,20 @@ export default function SongFinder() {
         {(addingToQueue.status === "success" ||
           addingToQueue.status === "failure") && (
           <>
-            <div
-              className={`alert ${
-                addingToQueue.status === "success"
-                  ? "alert-success"
-                  : "alert-error"
-              }`}
-            >
-              <span>
-                {addingToQueue.status === "success"
-                  ? "Added to queue"
-                  : "Failed to add to queue"}
-              </span>
+            <div className="toast toast-top toast-center">
+              <div
+                className={`alert ${
+                  addingToQueue.status === "success"
+                    ? "alert-success"
+                    : "alert-error"
+                } rounded-md`}
+              >
+                <span>
+                  {addingToQueue.status === "success"
+                    ? "Added to queue"
+                    : "Failed to add to queue"}
+                </span>
+              </div>
             </div>
           </>
         )}
@@ -147,11 +147,33 @@ export default function SongFinder() {
                       setAddingToQueue({ status: "idle", trackUri: track.uri })
                     }
                   >
-                    <div className="flex flex-col">
-                      <a className="self-start font-bold">{track.name}</a>
-                      <a className="self-end">{track.artists[0].name}</a>
-                      {addingToQueue.trackUri === track.uri &&
-                        addingToQueue.status === "loading" && <Loading />}
+                    <div className="card card-side bg-base-200 shadow-xl max-h-full search-res-card">
+                      <figure className="max-h-full aspect-square max-w-[4rem]">
+                        <img
+                          src={track.album.images[0].url}
+                          alt="Track cover"
+                          className="object-contain max-h-full"
+                        />
+                      </figure>
+
+                      <div className="card-body p-4">
+                        <div className="now-playing__side">
+                          <div className="now-playing__name">
+                            <h2 className="card-title">{track.name}</h2>
+                          </div>
+                          <div className="now-playing__artist">
+                            {track.artists.map((artist, index) => (
+                              <span key={artist.uri}>
+                                {index > 0 ? ", " : ""}
+                                {artist.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="queue-tip absolute right-0 mr-1 mt-1">
+                        Click to add to queue
+                      </div>
                     </div>
                   </li>
                 ))}
