@@ -15,6 +15,8 @@ export const audioRacingP5Sketch = (p: p5) => {
   let estimatedNumberOfPointsInContainedInWidthValue: number = 0;
   let trackPoints: Point[];
   let carRaceStats: Car[];
+  let audioInput: p5.AudioIn;
+  const fft = new p5.FFT();
 
   let trackBuffer: p5.Graphics;
   let trackObjects: ((
@@ -137,14 +139,10 @@ export const audioRacingP5Sketch = (p: p5) => {
       this.carImage = createCarImage(color);
     }
 
-    move(spectrum: number[], trackPoints: p5.Vector[]) {
+    move(assignedSpectrum: number[], trackPoints: p5.Vector[]) {
       const value =
-        spectrum
-          .slice(
-            this.audioFrequencyIntervalAssign.low,
-            this.audioFrequencyIntervalAssign.high
-          )
-          .reduce((acc, x) => acc + x, 0) / this.audioIntervalSize;
+        assignedSpectrum.reduce((acc, x) => acc + x, 0) /
+        assignedSpectrum.length;
 
       const {
         closestPt,
@@ -766,11 +764,38 @@ export const audioRacingP5Sketch = (p: p5) => {
     return starting_grid;
   }
 
-  p.setup = () => {
+  const drawRaceStatsTable = (
+    surface: p5,
+    carsForFaceStats: Car[],
+    size: { width: number; height: number },
+    position: Point
+  ) => {
+    const partHeight = size.height / (carsForFaceStats.length + 1);
+    surface.push();
+    surface.noStroke();
+
+    // header
+  };
+
+  p.setup = async () => {
     p.createCanvas(WIDTH, HEIGHT);
     trackBuffer = p.createGraphics(WIDTH, HEIGHT);
     trackBuffer.background(0, 255, 0, 100);
     trackBuffer.angleMode(p.DEGREES);
+
+    audioInput = new p5.AudioIn();
+    const virtualInputIndex: number = await audioInput
+      .getSources()
+      .then((devices: InputDeviceInfo[]) =>
+        devices.findIndex((dev) => dev.label.includes("VoiceMeeter Output"))
+      );
+
+    if (!virtualInputIndex || isNaN(virtualInputIndex)) {
+      alert("Virtual input for Spotify couldn't be found!");
+      return;
+    }
+    audioInput.setSource(virtualInputIndex);
+    audioInput.start();
 
     // generate the track skeleton
     const points = random_points();
@@ -912,27 +937,42 @@ export const audioRacingP5Sketch = (p: p5) => {
   };
 
   p.draw = () => {
-    const randomFakeSpectrum = Array.from({ length: 31 }, () =>
-      p.random(0, 255)
-    );
+    // const randomFakeSpectrum = Array.from({ length: 31 }, () =>
+    //   p.random(0, 255)
+    // );
+    const spectrum: number[] = fft.analyze(16);
+    const firstNonZeroIndex = spectrum.findIndex((x) => x !== 0);
+    let lastNonZeroIndex;
+    for (let i = spectrum.length - 1; i > 2; i--) {
+      if (spectrum.at(i) !== 0) {
+        lastNonZeroIndex = i + 1;
+        break;
+      }
+    }
+    const audioSpectrum = spectrum.slice(firstNonZeroIndex, lastNonZeroIndex);
+    const audioPartSize = Math.floor(audioSpectrum.length / CARS.length);
 
     // placing generated track
     p.image(trackBuffer, 0, 0);
 
-    const carObjectsOnTrack = trackObjects.filter(
-      (object) => object.type === "car"
-    ) as { type: "car"; car: Car; indexInTrack: number }[];
-
     // rendering track objects
+    let carCounter = 0;
     trackObjects.forEach((object) => {
       if (object.type === "car") {
         const car = object.car;
         p.push();
         p.angleMode(p.DEGREES);
-        car.move(randomFakeSpectrum, TRACK_POINT_VECTORS);
+        car.move(
+          audioSpectrum.slice(
+            carCounter * audioPartSize,
+            (carCounter + 1) * audioPartSize
+          ),
+          TRACK_POINT_VECTORS
+        );
         object.indexInTrack = car.prevClosestPointIndex;
         car.draw(p);
         p.pop();
+        carCounter++;
       }
       if (object.type === "trackOverlap") {
         rerenderTrackPart(
@@ -951,6 +991,7 @@ export const audioRacingP5Sketch = (p: p5) => {
         ? a.prevClosestPointIndex - b.prevClosestPointIndex
         : a.lapCount - b.lapCount
     );
+    // drawRaceStatsTable(carRaceStats);
     trackObjects.sort((a, b) => a.indexInTrack - b.indexInTrack);
   };
 };
