@@ -16,11 +16,19 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   let trackPoints: Point[];
   let carRaceStats: Car[];
   let audioInput: p5.AudioIn;
-  const fft = new p5.FFT();
+  const fft = new p5.FFT(0.8, 512);
 
   let audioRacingLogo: p5.Image;
   let albumCover: p5.Image;
   let backgroundBuffer: p5.Graphics;
+
+  const predefinedFrequencyRanges = [
+    "lowMid",
+    "mid",
+    "highMid",
+    "treble",
+    "bass",
+  ];
 
   let trackBuffer: p5.Graphics;
   let trackObjects: ((
@@ -146,11 +154,10 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       this.color = color;
     }
 
-    move(assignedSpectrum: number[], trackPoints: p5.Vector[]) {
-      const value =
-        assignedSpectrum.reduce((acc, x) => acc + x, 0) /
-        assignedSpectrum.length;
-
+    move(audioValue: number, trackPoints: p5.Vector[]) {
+      if (audioValue !== 0) {
+        console.log(audioValue);
+      }
       const {
         closestPt,
         closestPtIndexInTrack,
@@ -231,7 +238,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       const percentualMaxVelocityReached = this.velocityNum / maxVelocity;
 
       this.velocityNum *=
-        p.constrain(value / 100, 1, 2) * (1.5 - percentualMaxVelocityReached);
+        p.constrain(audioValue / 100, 1, 2) *
+        (1.5 - percentualMaxVelocityReached);
       this.velocityNum /= p.constrain(
         (p.abs(diffBetweenHeadings) / 4) * percentualMaxVelocityReached,
         1,
@@ -762,6 +770,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   ) => {
     const partHeight = size.height / (carsForFaceStats.length + 1);
     surface.push();
+    shadow(surface);
     surface.noStroke();
 
     // table background
@@ -810,6 +819,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         partPosition.y + carStatSize.height / 2
       );
     }
+    noShadow(surface);
+    surface.pop();
   };
 
   const getColorPalleteFromImage = (image: p5.Image, numOfColors: number) => {
@@ -887,7 +898,6 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     trackBuffer.angleMode(p.DEGREES);
     backgroundBuffer = createBackground(p.createGraphics(WIDTH, HEIGHT));
     p.image(albumCover, 0, 0, 150, 150);
-    console.log("chuj");
 
     // create background
 
@@ -1025,7 +1035,6 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       )
     );
     trackObjects.sort((a, b) => a.indexInTrack - b.indexInTrack);
-    console.log(trackObjects);
     p.frameRate(60);
 
     carRaceStats = Array.from(CARS);
@@ -1037,14 +1046,15 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     const virtualInputIndex: number = await audioInput
       .getSources()
       .then((devices: InputDeviceInfo[]) =>
-        devices.findIndex((dev) => dev.label.includes("VoiceMeeter Output"))
+        devices.findIndex((dev) => dev.label.includes("Default"))
       );
 
-    if (!virtualInputIndex || isNaN(virtualInputIndex)) {
+    if (isNaN(virtualInputIndex)) {
       alert("Virtual input for Spotify couldn't be found!");
       return;
     }
     audioInput.setSource(virtualInputIndex);
+    fft.setInput(audioInput);
     audioInput.start();
   };
 
@@ -1052,18 +1062,20 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     // const randomFakeSpectrum = Array.from({ length: 31 }, () =>
     //   p.random(0, 255)
     // );
-    const spectrum: number[] = fft.analyze(16);
-    console.log(spectrum);
-    const firstNonZeroIndex = spectrum.findIndex((x) => x !== 0);
-    let lastNonZeroIndex;
-    for (let i = spectrum.length - 1; i > 2; i--) {
-      if (spectrum.at(i) !== 0) {
-        lastNonZeroIndex = i + 1;
-        break;
-      }
-    }
-    const audioSpectrum = spectrum.slice(firstNonZeroIndex, lastNonZeroIndex);
-    const audioPartSize = Math.floor(audioSpectrum.length / CARS.length);
+    const spectrum: number[] = fft.analyze(512);
+    // const firstNonZeroIndex = spectrum.findIndex((x) => x !== 0);
+    // let lastNonZeroIndex;
+    // for (let i = spectrum.length - 1; i > 2; i--) {
+    //   if (spectrum.at(i) !== 0) {
+    //     lastNonZeroIndex = i + 1;
+    //     break;
+    //   }
+    // }
+    // const audioSpectrum = spectrum.slice(firstNonZeroIndex, lastNonZeroIndex);
+    // const audioPartSize = Math.floor(audioSpectrum.length / CARS.length);
+    const energyValues = predefinedFrequencyRanges.map((range) =>
+      fft.getEnergy(range)
+    );
 
     // drawing background
     p.image(backgroundBuffer, 0, 0);
@@ -1077,13 +1089,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         const car = object.car;
         p.push();
         p.angleMode(p.DEGREES);
-        car.move(
-          audioSpectrum.slice(
-            carCounter * audioPartSize,
-            (carCounter + 1) * audioPartSize
-          ),
-          TRACK_POINT_VECTORS
-        );
+        car.move(energyValues[carCounter], TRACK_POINT_VECTORS);
         object.indexInTrack = car.prevClosestPointIndex;
         car.draw(p);
         p.pop();
