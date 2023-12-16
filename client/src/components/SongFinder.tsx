@@ -32,7 +32,10 @@ export default function SongFinder() {
   const abortController = new AbortController();
 
   useEffect(() => {
-    if (searchValue.length < 3 || session.status !== "authenticated") return;
+    if (searchValue.length < 3 || session.status !== "authenticated") {
+      setSearchResults(null);
+      return;
+    }
     if (searching) {
       abortController.abort();
     }
