@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import { WebPlaybackSDK } from "react-spotify-web-playback-sdk";
 import { getFetcherForExpress } from "../utils/fetchers";
 import { Session } from "../utils/types/session";

@@ -13,12 +13,14 @@ import {
 import { putFetcher } from "../utils/fetchers";
 import { TransferPlaybackRequest } from "../utils/types/spotify-api";
 import Loading from "./LoadingAnimation";
+import { useAlbumCover } from "./providers/AlbumCoverProvider";
 
 export default function PlaybackController({ token }: { token: string }) {
   const player = useSpotifyPlayer();
   const state = usePlaybackState();
   const device = usePlayerDevice();
   const error = useErrorState();
+  const { setAlbumCoverUri } = useAlbumCover();
 
   useEffect(() => {
     if (!device?.device_id) {
@@ -29,6 +31,13 @@ export default function PlaybackController({ token }: { token: string }) {
       play: false,
     });
   }, [device?.device_id, token]);
+
+  useEffect(() => {
+    if (!state?.track_window.current_track.album.images[0].url) {
+      return;
+    }
+    setAlbumCoverUri(state?.track_window.current_track.album.images[0].url);
+  }, [state?.track_window.current_track.album.images[0].url]);
 
   if (!player || !state) return <Loading />;
 

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import SessionRefresher from "./components/SessionRefresher";
+import { AlbumCoverProvider } from "./components/providers/AlbumCoverProvider";
 import { SessionProvider } from "./components/providers/SessionProvider";
 import "./index.css";
 import reportWebVitals from "./reportWebVitals";
@@ -24,9 +25,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <SessionProvider>
-      <div className="text-base-content">
-        <RouterProvider router={router} />
-      </div>
+      <AlbumCoverProvider>
+        <div className="text-base-content">
+          <RouterProvider router={router} />
+        </div>
+      </AlbumCoverProvider>
     </SessionProvider>
   </React.StrictMode>
 );

@@ -52,6 +52,15 @@ api.use(express.json());
 
 api.use(cors());
 
+api.get("/album-cover/*", async (req, res) => {
+  const url = req.url.slice("/album-cover".length + 1);
+  const { data } = await axios(url, {
+    responseType: "arraybuffer",
+  });
+  res.set("Content-Type", "image/jpeg");
+  res.send(data);
+});
+
 api.get("/login", (req, res) => {
   curr_state = randomBytes(16).toString("hex");
 
@@ -202,6 +211,7 @@ api.get("/refresh_session", async (req, res) => {
   return res.redirect("/");
 });
 
+api.use("/assets", express.static(path.join(__dirname, "..", "assets")));
 api.use(express.static(path.join(__dirname, "..", "client", "build")));
 api.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "client", "build", "index.html"));

@@ -9,7 +9,7 @@ type Point = {
   y: number;
 };
 
-export const audioRacingP5Sketch = (p: p5) => {
+export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   const trackPartsNeededToRerender: { point: Point; indexInTrack: number }[] =
     [];
   let estimatedNumberOfPointsInContainedInWidthValue: number = 0;
@@ -17,6 +17,10 @@ export const audioRacingP5Sketch = (p: p5) => {
   let carRaceStats: Car[];
   let audioInput: p5.AudioIn;
   const fft = new p5.FFT();
+
+  let audioRacingLogo: p5.Image;
+  let albumCover: p5.Image;
+  let backgroundBuffer: p5.Graphics;
 
   let trackBuffer: p5.Graphics;
   let trackObjects: ((
@@ -124,6 +128,8 @@ export const audioRacingP5Sketch = (p: p5) => {
     private lastLapTotalTime: number = 0;
     bestLapTime: number = Infinity;
 
+    color: p5.Color;
+
     constructor(
       position: p5.Vector,
       heading: p5.Vector,
@@ -137,6 +143,7 @@ export const audioRacingP5Sketch = (p: p5) => {
         this.audioFrequencyIntervalAssign.high -
         this.audioFrequencyIntervalAssign.low;
       this.carImage = createCarImage(color);
+      this.color = color;
     }
 
     move(assignedSpectrum: number[], trackPoints: p5.Vector[]) {
@@ -298,23 +305,6 @@ export const audioRacingP5Sketch = (p: p5) => {
 
   const INTERPOLATE_STEP = 1 / (SPLINE_POINTS_COUNT - 1);
   const INTERPOLATE_DEGREE = 3;
-
-  function create_kerb_tile() {
-    const tile_height = 7;
-    const tile_width = 12;
-    const kerb_tile = p.createGraphics(tile_width, tile_height);
-    kerb_tile.noStroke();
-    kerb_tile.background(255);
-    kerb_tile.fill(255, 0, 0);
-    kerb_tile.rect(0, 0, Math.floor(tile_width / 4), tile_height);
-    kerb_tile.rect(
-      Math.floor(tile_width / 2),
-      0,
-      Math.floor(tile_width / 4),
-      tile_height
-    );
-    return kerb_tile;
-  }
 
   function random_points(
     min = MIN_POINTS,
@@ -774,28 +764,136 @@ export const audioRacingP5Sketch = (p: p5) => {
     surface.push();
     surface.noStroke();
 
+    // table background
+    surface.fill(0, 0, 0, 100);
+    surface.rect(position.x, position.y + partHeight, size.width, size.height);
+
     // header
+    surface.image(
+      audioRacingLogo,
+      position.x,
+      position.y,
+      size.width,
+      partHeight
+    );
+
+    const carStatSize = {
+      width: size.width - size.width / 6,
+      height: partHeight - partHeight / 4,
+      widthOffset: size.width / 12,
+      heightOffset: partHeight / 8,
+    };
+
+    for (let i = 0; i < carsForFaceStats.length; i++) {
+      const car = carsForFaceStats[i];
+      const partPosition = {
+        x: position.x + carStatSize.widthOffset,
+        y: position.y + partHeight * (i + 1) + carStatSize.heightOffset,
+      };
+      surface.fill(car.color);
+      surface.rect(
+        partPosition.x,
+        partPosition.y,
+        carStatSize.width,
+        carStatSize.height
+      );
+      surface.fill(255);
+      surface.textSize(carStatSize.height / 4);
+      surface.textAlign(p.CENTER, p.CENTER);
+      surface.text(
+        `${i + 1}.   Lap: ${car.lapCount} ${
+          car.bestLapTime !== Infinity
+            ? ` - Best: ${car.bestLapTime.toFixed(2)}ms`
+            : ""
+        }`,
+        partPosition.x + carStatSize.width / 2,
+        partPosition.y + carStatSize.height / 2
+      );
+    }
+  };
+
+  const getColorPalleteFromImage = (image: p5.Image, numOfColors: number) => {
+    const colors: {
+      color: [r: number, g: number, b: number];
+      amount: number;
+    }[] = [];
+    image.loadPixels();
+
+    for (let j = 0; j < image.pixels.length; j += 64) {
+      let r = image.pixels[j];
+      let g = image.pixels[j + 1];
+      let b = image.pixels[j + 2];
+
+      let temp = colors.find((element) => {
+        return (
+          element.color[0] == r &&
+          element.color[1] == g &&
+          element.color[2] == b
+        );
+      });
+
+      if (!temp) {
+        colors.push({ color: [r, g, b], amount: 1 });
+      } else {
+        temp.amount += 1;
+      }
+      colors.sort((a, b) => b.amount - a.amount);
+    }
+    return colors
+      .filter((_, index) => index < numOfColors)
+      .map((color) => p.color(color.color[0], color.color[1], color.color[2]));
+  };
+
+  const createBackground = (surface: p5.Graphics) => {
+    const colorPallete = getColorPalleteFromImage(albumCover, 5);
+
+    surface.angleMode(p.DEGREES);
+    const angle = p.random(35, 55);
+    surface.translate(surface.width / 2, surface.height / 2);
+    surface.rotate(angle);
+    surface.translate(-surface.width / 2, -surface.height / 2);
+
+    const numOfStrikes = 50;
+    surface.noStroke();
+    surface.background(p.random(colorPallete));
+    for (let i = 0; i < numOfStrikes; i++) {
+      surface.push();
+      surface.stroke(p.color(p.random(colorPallete)));
+
+      surface.strokeWeight(p.random(1, 3));
+      const lineLength = -p.random(30, 100);
+      const noiseVal = p.noise(i / 10);
+      surface.translate(p.width * noiseVal, p.height * noiseVal);
+      surface.line(0, 0, 0, lineLength);
+      surface.pop();
+    }
+    return surface;
+  };
+
+  p.preload = () => {
+    audioRacingLogo = p.loadImage("/assets/audio-racing-logo.png", (im) =>
+      console.log(im.width)
+    );
+
+    albumCover = p.loadImage(`/album-cover/${albumCoverUri}`, (im) =>
+      console.log(im.width)
+    );
   };
 
   p.setup = async () => {
     p.createCanvas(WIDTH, HEIGHT);
     trackBuffer = p.createGraphics(WIDTH, HEIGHT);
-    trackBuffer.background(0, 255, 0, 100);
+    trackBuffer.background(0, 0, 0, 0);
     trackBuffer.angleMode(p.DEGREES);
+    backgroundBuffer = createBackground(p.createGraphics(WIDTH, HEIGHT));
+    p.image(albumCover, 0, 0, 150, 150);
+    console.log("chuj");
 
-    audioInput = new p5.AudioIn();
-    const virtualInputIndex: number = await audioInput
-      .getSources()
-      .then((devices: InputDeviceInfo[]) =>
-        devices.findIndex((dev) => dev.label.includes("VoiceMeeter Output"))
-      );
+    // create background
 
-    if (!virtualInputIndex || isNaN(virtualInputIndex)) {
-      alert("Virtual input for Spotify couldn't be found!");
-      return;
+    if (!backgroundBuffer) {
+      console.error("Background couldn't be created!");
     }
-    audioInput.setSource(virtualInputIndex);
-    audioInput.start();
 
     // generate the track skeleton
     const points = random_points();
@@ -927,13 +1025,27 @@ export const audioRacingP5Sketch = (p: p5) => {
       )
     );
     trackObjects.sort((a, b) => a.indexInTrack - b.indexInTrack);
+    console.log(trackObjects);
     p.frameRate(60);
-    p.background(0, 200, 0);
 
     carRaceStats = Array.from(CARS);
 
     // setting race start time
     raceStartTimestamp = p.millis();
+
+    audioInput = new p5.AudioIn();
+    const virtualInputIndex: number = await audioInput
+      .getSources()
+      .then((devices: InputDeviceInfo[]) =>
+        devices.findIndex((dev) => dev.label.includes("VoiceMeeter Output"))
+      );
+
+    if (!virtualInputIndex || isNaN(virtualInputIndex)) {
+      alert("Virtual input for Spotify couldn't be found!");
+      return;
+    }
+    audioInput.setSource(virtualInputIndex);
+    audioInput.start();
   };
 
   p.draw = () => {
@@ -941,6 +1053,7 @@ export const audioRacingP5Sketch = (p: p5) => {
     //   p.random(0, 255)
     // );
     const spectrum: number[] = fft.analyze(16);
+    console.log(spectrum);
     const firstNonZeroIndex = spectrum.findIndex((x) => x !== 0);
     let lastNonZeroIndex;
     for (let i = spectrum.length - 1; i > 2; i--) {
@@ -952,6 +1065,8 @@ export const audioRacingP5Sketch = (p: p5) => {
     const audioSpectrum = spectrum.slice(firstNonZeroIndex, lastNonZeroIndex);
     const audioPartSize = Math.floor(audioSpectrum.length / CARS.length);
 
+    // drawing background
+    p.image(backgroundBuffer, 0, 0);
     // placing generated track
     p.image(trackBuffer, 0, 0);
 
@@ -991,7 +1106,12 @@ export const audioRacingP5Sketch = (p: p5) => {
         ? a.prevClosestPointIndex - b.prevClosestPointIndex
         : a.lapCount - b.lapCount
     );
-    // drawRaceStatsTable(carRaceStats);
+    drawRaceStatsTable(
+      p,
+      carRaceStats,
+      { width: 300, height: (CARS.length + 1) * 100 },
+      { x: 0, y: 0 }
+    );
     trackObjects.sort((a, b) => a.indexInTrack - b.indexInTrack);
   };
 };

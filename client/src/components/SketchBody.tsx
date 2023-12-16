@@ -9,15 +9,17 @@ import React from "react";
 // prettier-ignore
 import { audioRacingP5Sketch } from "../visualizers/audio-racing-p5";
 
-class SketchBody extends React.Component {
+class SketchBody extends React.Component<{ albumCoverUri: string }> {
   myRef: React.RefObject<HTMLDivElement>;
   myP5: p5 | undefined;
+  albumCoverUri: string;
 
-  constructor() {
-    super({});
+  constructor(props: { albumCoverUri: string }) {
+    super(props);
     this.myRef = React.createRef();
+    this.albumCoverUri = props.albumCoverUri;
   }
-  Sketch = audioRacingP5Sketch;
+  Sketch = (p: p5) => audioRacingP5Sketch(p, this.albumCoverUri);
 
   // Sketch = (p: p5) => {
   //   let audioInput: p5.AudioIn;
