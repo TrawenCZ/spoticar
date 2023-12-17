@@ -27,13 +27,21 @@ export default function NavBar() {
     <>
       <div className="flex flex-col justify-center w-full">
         <div
-          className={`navbar bg-base-200 justify-between backdrop-blur-sm bg-opacity-25 max-h-32 shadow-md ${
+          className={`navbar bg-base-300 justify-between backdrop-blur-sm bg-opacity-25 max-h-32 shadow-md ${
             show ? "" : "hidden"
           }`}
         >
+          <img
+            src="/assets/audio-racing-title.png"
+            alt="Audio Racing"
+            className="mt-4 ml-6 h-20"
+          />
           {authenticated && (
             <>
-              <MySpotifyPlayerWrapper /> <SongFinder />
+              <div className="ml-7">
+                <MySpotifyPlayerWrapper />
+              </div>{" "}
+              <SongFinder />
             </>
           )}
           <div className="mr-5">
@@ -43,7 +51,9 @@ export default function NavBar() {
 
         {(authenticated || !show) && (
           <button
-            className="btn btn-ghost place-self-center"
+            className={`btn btn-ghost place-self-center ${
+              !show ? "animate-bounce" : ""
+            }`}
             onClick={() => setShow((val) => !val)}
           >
             {show ? <ExpandLessIcon /> : <ExpandMoreIcon />}

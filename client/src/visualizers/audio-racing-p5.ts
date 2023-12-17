@@ -14,11 +14,11 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     [];
   let estimatedNumberOfPointsInContainedInWidthValue: number = 0;
   let trackPoints: Point[];
-  let carRaceStats: Car[];
+  let carRaceStats: { alteredColor: number[]; car: Car }[];
   let audioInput: p5.AudioIn;
   const fft = new p5.FFT(0.8, 512);
 
-  let audioRacingLogo: p5.Image;
+  let audioRacingIcon: p5.Image;
   let albumCover: p5.Image;
   let backgroundBuffer: p5.Graphics;
 
@@ -761,62 +761,69 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
   const drawRaceStatsTable = (
     surface: p5,
-    carsForFaceStats: Car[],
+    carsForFaceStats: { alteredColor: number[]; car: Car }[],
     size: { width: number; height: number },
     position: Point
   ) => {
-    const partHeight = size.height / (carsForFaceStats.length + 1);
+    const partWidth = size.width / (carsForFaceStats.length + 0.55);
     surface.push();
     shadow(surface);
     surface.noStroke();
 
     // table background
     surface.fill(0, 0, 0, 100);
-    surface.rect(position.x, position.y + partHeight, size.width, size.height);
+    surface.rect(position.x, position.y, size.width, size.height);
+    noShadow(surface);
 
     // header
     surface.image(
-      audioRacingLogo,
+      audioRacingIcon,
       position.x,
       position.y,
-      size.width,
-      partHeight
+      partWidth * 0.55,
+      size.height
     );
 
     const carStatSize = {
-      width: size.width - size.width / 6,
-      height: partHeight - partHeight / 4,
-      widthOffset: size.width / 12,
-      heightOffset: partHeight / 8,
+      width: partWidth - partWidth / 6,
+      height: size.height - partWidth / 6,
+      widthOffset: partWidth / 12,
+      heightOffset: partWidth / 12,
     };
 
     for (let i = 0; i < carsForFaceStats.length; i++) {
-      const car = carsForFaceStats[i];
+      const carStats = carsForFaceStats[i];
       const partPosition = {
-        x: position.x + carStatSize.widthOffset,
-        y: position.y + partHeight * (i + 1) + carStatSize.heightOffset,
+        x: position.x + carStatSize.widthOffset + partWidth * (i + 0.55),
+        y: position.y + carStatSize.heightOffset,
       };
-      surface.fill(car.color);
+      surface.fill(carStats.alteredColor);
       surface.rect(
         partPosition.x,
         partPosition.y,
         carStatSize.width,
         carStatSize.height
       );
-      surface.fill(255);
-      surface.textSize(carStatSize.height / 4);
+      surface.fill(
+        carStats.alteredColor[0] > 170 &&
+          carStats.alteredColor[1] > 170 &&
+          carStats.alteredColor[2] > 170
+          ? p.color(0, 0, 0)
+          : p.color(255, 255, 255)
+      );
+      surface.textSize(carStatSize.height / 3);
       surface.textAlign(p.CENTER, p.CENTER);
+      surface.textFont("Calibri");
       surface.text(
-        `${i + 1}.   Lap: ${car.lapCount} ${
-          car.bestLapTime !== Infinity
-            ? ` - Best: ${car.bestLapTime.toFixed(2)}ms`
+        `${i + 1}. Lap: ${carStats.car.lapCount} ${
+          carStats.car.bestLapTime !== Infinity
+            ? ` - Best: ${(carStats.car.bestLapTime / 1000).toFixed(3)}s`
             : ""
         }`,
         partPosition.x + carStatSize.width / 2,
         partPosition.y + carStatSize.height / 2
       );
     }
-    noShadow(surface);
     surface.pop();
   };
 
@@ -834,9 +841,9 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
       let temp = colors.find((element) => {
         return (
-          element.color[0] == r &&
-          element.color[1] == g &&
-          element.color[2] == b
+          p.abs(element.color[0] - r) < 10 &&
+          p.abs(element.color[1] - g) < 10 &&
+          p.abs(element.color[2] - b) < 10
         );
       });
 
@@ -849,43 +856,56 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     }
     return colors
       .filter((_, index) => index < numOfColors)
-      .map((color) => p.color(color.color[0], color.color[1], color.color[2]));
+      .map((color) => [color.color[0], color.color[1], color.color[2]]);
   };
 
   const createBackground = (surface: p5.Graphics) => {
     const colorPallete = getColorPalleteFromImage(albumCover, 5);
 
     surface.angleMode(p.DEGREES);
-    const angle = p.random(35, 55);
+    const angle = p.random(40, 50);
     surface.translate(surface.width / 2, surface.height / 2);
     surface.rotate(angle);
+
     surface.translate(-surface.width / 2, -surface.height / 2);
 
-    const numOfStrikes = 50;
+    const numOfStrikes = 150;
     surface.noStroke();
-    surface.background(p.random(colorPallete));
+
+    const backgroundColor = colorPallete[0];
+    if (backgroundColor[0] + backgroundColor[1] + backgroundColor[2] > 600) {
+      const diff = Math.ceil(
+        (backgroundColor[0] + backgroundColor[1] + backgroundColor[2] - 600) / 3
+      );
+      backgroundColor[0] = backgroundColor[0] - diff;
+      backgroundColor[1] = backgroundColor[1] - diff;
+      backgroundColor[2] = backgroundColor[2] - diff;
+    }
+    console.log(backgroundColor);
+    surface.background(backgroundColor);
+    const palleteForStrikes = colorPallete.slice(1);
     for (let i = 0; i < numOfStrikes; i++) {
       surface.push();
-      surface.stroke(p.color(p.random(colorPallete)));
+      surface.stroke(p.random(palleteForStrikes));
 
-      surface.strokeWeight(p.random(1, 3));
-      const lineLength = -p.random(30, 100);
-      const noiseVal = p.noise(i / 10);
-      surface.translate(p.width * noiseVal, p.height * noiseVal);
+      surface.strokeWeight(p.random(1, 4));
+      const lineLength = -p.random(30, 350);
+      const noiseVal = p.noise(i / 3);
+      const noiseVal2 = p.noise(i / 4 + 100);
+      surface.translate(
+        p.width * 3 * noiseVal - p.width,
+        p.height * 3 * noiseVal2 - p.height
+      );
+
       surface.line(0, 0, 0, lineLength);
       surface.pop();
     }
-    return surface;
+    return { surface: surface, colorPalleteFromAlbumCover: palleteForStrikes };
   };
 
   p.preload = () => {
-    audioRacingLogo = p.loadImage("/assets/audio-racing-logo.png", (im) =>
-      console.log(im.width)
-    );
-    albumCover = p.loadImage(
-      "http://localhost:3000/assets/album_cover.jpg",
-      (im) => console.log(im.width)
-    );
+    audioRacingIcon = p.loadImage("/assets/audio-racing-bg-icon.png");
+    albumCover = p.loadImage("http://localhost:3000/assets/album_cover.jpg");
   };
 
   p.setup = async () => {
@@ -897,7 +917,10 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     trackBuffer.angleMode(p.DEGREES);
 
     // create background
-    backgroundBuffer = createBackground(p.createGraphics(WIDTH, HEIGHT));
+    const { surface, colorPalleteFromAlbumCover } = createBackground(
+      p.createGraphics(WIDTH, HEIGHT)
+    );
+    backgroundBuffer = surface;
 
     // generate the track skeleton
     const points = random_points();
@@ -992,16 +1015,53 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       };
     }
 
+    const colorHelper = (color: number) =>
+      color > 110 ? color - 70 : color + 70;
+
+    // const palleteForCars = colorPalleteFromAlbumCover.map((color, index) => {
+    //   for (let i = 0; i < colorPalleteFromAlbumCover.length; i++) {
+    //     if (i === index) continue;
+    //     if (
+    //       p.abs(colorPalleteFromAlbumCover[i][0] - color[0]) < 70 &&
+    //       p.abs(colorPalleteFromAlbumCover[i][1] - color[1]) < 70 &&
+    //       p.abs(colorPalleteFromAlbumCover[i][2] - color[2]) < 70
+    //     ) {
+    //       color[0] = colorHelper(color[0]);
+    //       color[1] = colorHelper(color[1]);
+    //       color[2] = colorHelper(color[2]);
+    //     }
+    //   }
+    //   return color;
+    // });
+
+    const partDivider = 255 + 70;
+    const colorDividers = [
+      colorPalleteFromAlbumCover[0][0] / partDivider,
+      colorPalleteFromAlbumCover[0][1] / partDivider,
+      colorPalleteFromAlbumCover[0][2] / partDivider,
+    ];
+    const palleteForCars = [15, 140, 210].map((colorMultiplier) => [
+      70 + colorDividers[0] * colorMultiplier,
+      70 + colorDividers[1] * colorMultiplier,
+      70 + colorDividers[2] * colorMultiplier,
+    ]);
+
     for (let i = 0; i < 3; i++) {
       CARS.push(
         new Car(
           carInitPositions[i].position,
           carInitPositions[i].heading,
           { low: i * 10, high: (i + 1) * 10 },
-          p.color(i === 2 ? 255 : 0, i === 1 ? 255 : 0, i === 0 ? 255 : 0)
+          p.color(palleteForCars[i])
         )
       );
     }
+
+    carRaceStats = CARS.map((car, index) => {
+      const carColorCopy = p.color(car.color);
+      // carColorCopy.setAlpha(100);
+      return { alteredColor: palleteForCars[index], car: car };
+    });
 
     // creating array for track objects that need to be drawn in every frame at the correct order (mostly because of track overlaping parts)
     trackObjects = CARS.map(
@@ -1030,8 +1090,6 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     );
     trackObjects.sort((a, b) => a.indexInTrack - b.indexInTrack);
     p.frameRate(60);
-
-    carRaceStats = Array.from(CARS);
 
     // setting race start time
     raceStartTimestamp = p.millis();
@@ -1104,15 +1162,15 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     // keeping cars in seperate array to be able to store their race stats
     CARS.sort((a, b) => a.prevClosestPointIndex - b.prevClosestPointIndex);
     carRaceStats.sort((a, b) =>
-      a.lapCount - b.lapCount === 0
-        ? a.prevClosestPointIndex - b.prevClosestPointIndex
-        : a.lapCount - b.lapCount
+      a.car.lapCount - b.car.lapCount === 0
+        ? a.car.prevClosestPointIndex - b.car.prevClosestPointIndex
+        : a.car.lapCount - b.car.lapCount
     );
     drawRaceStatsTable(
       p,
       carRaceStats,
-      { width: 300, height: (CARS.length + 1) * 100 },
-      { x: 0, y: 0 }
+      { width: (CARS.length + 0.55) * 250, height: 80 },
+      { x: 0, y: HEIGHT - 80 }
     );
     trackObjects.sort((a, b) => a.indexInTrack - b.indexInTrack);
   };

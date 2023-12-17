@@ -97,14 +97,14 @@ export default function SongFinder() {
       >
         <label className="form-control w-full" tabIndex={0}>
           <div className="label">
-            <span className="label-text">
+            <span className="label-text drop-shadow-2xl">
               Try to search your favorite song on Spotify
             </span>
           </div>
           <input
             type="text"
             placeholder="Type here"
-            className="input input-bordered w-full"
+            className="input input-bordered w-full opacity-50"
             onChange={(e) => {
               setSearchValue(e.target.value);
             }}
@@ -135,7 +135,7 @@ export default function SongFinder() {
         {searchResults &&
           (addingToQueue.status === "idle" ||
             addingToQueue.status === "loading") && (
-            <div className="dropdown-content bg-base-200 max-h-60 overflow-auto flex-col rounded-md w-full">
+            <div className="dropdown-content bg-base-200 max-h-60 overflow-auto flex-col rounded-md w-full bg-opacity-60">
               <ul
                 className="menu menu-compact w-full"
                 // use ref to calculate the width of parent
@@ -143,14 +143,14 @@ export default function SongFinder() {
                 {searchResults.tracks.items.map((track) => (
                   <li
                     id={track.id}
-                    className={
+                    className={` ${
                       addingToQueue.status === "loading" ? "disabled" : ""
-                    }
+                    }`}
                     onClick={() =>
                       setAddingToQueue({ status: "idle", trackUri: track.uri })
                     }
                   >
-                    <div className="card card-side bg-base-200 shadow-xl max-h-full search-res-card">
+                    <div className="card card-side bg-base-200 shadow-xl max-h-full search-res-card bg-opacity-60">
                       <figure className="max-h-full aspect-square max-w-[4rem]">
                         <img
                           src={track.album.images[0].url}

@@ -19,7 +19,7 @@ export default function ProfileCard() {
               tabIndex={0}
             >
               <div className="avatar">
-                <div className="rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                <div className="rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 opacity-70">
                   <img src={session.avatar} alt="Avatar" />
                 </div>
               </div>
@@ -37,7 +37,7 @@ export default function ProfileCard() {
           )}
           <ul
             tabIndex={0}
-            className="mt-3 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box"
+            className="mt-6 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box opacity-60 bg-opacity-50"
           >
             <li>
               <a className="font-extrabold">{session.name}</a>
