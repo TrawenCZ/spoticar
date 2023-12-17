@@ -9,14 +9,8 @@ import "./index.css";
 import reportWebVitals from "./reportWebVitals";
 
 const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />,
-  },
-  {
-    path: "/trigger_refresh",
-    element: <SessionRefresher />,
-  },
+  { path: "/", element: <App /> },
+  { path: "/trigger_refresh", element: <SessionRefresher /> },
 ]);
 
 const root = ReactDOM.createRoot(

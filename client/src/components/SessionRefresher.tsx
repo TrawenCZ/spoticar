@@ -6,11 +6,12 @@ import Loading from "./LoadingAnimation";
 import { useSession } from "./providers/SessionProvider";
 
 export default function SessionRefresher() {
-  const { session, setSession } = useSession();
+  const { setSession } = useSession();
   const navigate = useNavigate();
 
   useEffect(() => {
     getFetcherForExpress<Session>("/session").then((res) => {
+      console.log("sem tu?");
       if (res.status === "success") {
         setSession(res.data);
       } else {

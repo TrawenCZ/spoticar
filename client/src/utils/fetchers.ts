@@ -102,3 +102,16 @@ export const getFetcherForExpress = <T>(
       return { status: "error", data: err };
     });
 };
+
+export const postFetcherForExpress = <T>(
+  urlSlug: string,
+  data: T
+): Promise<{ success: true } | { success: false; err: any }> => {
+  return axios
+    .post(urlSlug, data)
+    .then((res) => ({ success: true } as { success: true }))
+    .catch((err) => {
+      console.log(err);
+      return { success: false, err: err } as { success: false; err: any };
+    });
+};

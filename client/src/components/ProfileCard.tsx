@@ -1,12 +1,10 @@
 import { ReactComponent as SignOutIcon } from "@material-symbols/svg-400/outlined/logout.svg";
-import { useNavigate } from "react-router-dom";
 import { ReactComponent as SpotifyIcon } from "../static/spotify.svg";
 import Loading from "./LoadingAnimation";
 import { useSession } from "./providers/SessionProvider";
 
 export default function ProfileCard() {
   const { session, setSession } = useSession();
-  const navigate = useNavigate();
 
   if (session.status === "loading") return <Loading />;
 

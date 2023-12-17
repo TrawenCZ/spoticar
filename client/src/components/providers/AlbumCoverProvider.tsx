@@ -1,24 +1,39 @@
 import React, { createContext, useContext, useState } from "react";
 
+type AlbumCoverState = {
+  albumCoverIsSet: boolean;
+  triggerRerender: boolean;
+};
+
 const AlbumCoverContext = createContext<{
-  albumCoverUri: string | null;
-  setAlbumCoverUri: (_: string) => void;
-}>({ albumCoverUri: "", setAlbumCoverUri: (_: string) => {} });
+  state: AlbumCoverState;
+  setState: React.Dispatch<React.SetStateAction<AlbumCoverState>>;
+}>({
+  state: { albumCoverIsSet: false, triggerRerender: false },
+  setState: () => {},
+});
 
 export const AlbumCoverProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const [albumCoverUri, setAlbumCoverUri] = useState<string | null>(null);
+  const [albumCoverIsSet, setAlbumCoverIsSet] = useState<AlbumCoverState>({
+    albumCoverIsSet: false,
+    triggerRerender: false,
+  });
 
-  const voidSetter = (newAlbumCoverUri: string | null) => {
-    setAlbumCoverUri(newAlbumCoverUri);
+  const voidSetter = (newAlbumCoverState: AlbumCoverState) => {
+    console.log("newAlbumCoverState: " + newAlbumCoverState);
+    setAlbumCoverIsSet(newAlbumCoverState);
   };
 
   return (
     <AlbumCoverContext.Provider
-      value={{ albumCoverUri: albumCoverUri, setAlbumCoverUri: voidSetter }}
+      value={{
+        state: albumCoverIsSet,
+        setState: setAlbumCoverIsSet,
+      }}
     >
       {children}
     </AlbumCoverContext.Provider>

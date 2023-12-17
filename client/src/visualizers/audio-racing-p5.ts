@@ -155,9 +155,6 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     }
 
     move(audioValue: number, trackPoints: p5.Vector[]) {
-      if (audioValue !== 0) {
-        console.log(audioValue);
-      }
       const {
         closestPt,
         closestPtIndexInTrack,
@@ -885,9 +882,9 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     audioRacingLogo = p.loadImage("/assets/audio-racing-logo.png", (im) =>
       console.log(im.width)
     );
-
-    albumCover = p.loadImage(`/album-cover/${albumCoverUri}`, (im) =>
-      console.log(im.width)
+    albumCover = p.loadImage(
+      "http://localhost:3000/assets/album_cover.jpg",
+      (im) => console.log(im.width)
     );
   };
 
@@ -1042,7 +1039,10 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     // setting race start time
     raceStartTimestamp = p.millis();
 
+    const audioContext = p.getAudioContext() as AudioContext;
+    audioContext.resume();
     audioInput = new p5.AudioIn();
+    fft.setInput(audioInput);
     const virtualInputIndex: number = await audioInput
       .getSources()
       .then((devices: InputDeviceInfo[]) =>
@@ -1054,7 +1054,6 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       return;
     }
     audioInput.setSource(virtualInputIndex);
-    fft.setInput(audioInput);
     audioInput.start();
   };
 

@@ -4,8 +4,28 @@ import cors from "cors";
 import { randomBytes } from "crypto";
 import dotenv from "dotenv";
 import express from "express";
+import { createWriteStream } from "fs";
 import path from "path";
 import querystring from "querystring";
+
+import * as stream from "stream";
+import { promisify } from "util";
+
+const finished = promisify(stream.finished);
+async function downloadFile(
+  fileUrl: string,
+  outputLocationPath: string
+): Promise<any> {
+  const writer = createWriteStream(outputLocationPath);
+  return axios({
+    method: "get",
+    url: fileUrl,
+    responseType: "stream",
+  }).then((response) => {
+    response.data.pipe(writer);
+    return finished(writer); //this is a Promise
+  });
+}
 
 dotenv.config();
 assert(process.env.CLIENT_ID, "CLIENT_ID is not defined");
@@ -37,6 +57,8 @@ let curr_refresh_token: string | null = null;
 let curr_state: string | null = null;
 // please don't have a security heart attack, I will only use this app for myself at localhost
 
+let imageData: any = "javascript je chujovina";
+
 const api = express();
 
 api.use(function (req, res, next) {
@@ -52,13 +74,13 @@ api.use(express.json());
 
 api.use(cors());
 
-api.get("/album-cover/*", async (req, res) => {
-  const url = req.url.slice("/album-cover".length + 1);
-  const { data } = await axios(url, {
-    responseType: "arraybuffer",
-  });
-  res.set("Content-Type", "image/jpeg");
-  res.send(data);
+api.post("/album-cover", async (req, res) => {
+  const { url }: { url: string } = req.body;
+  await downloadFile(
+    url,
+    path.join(__dirname, "..", "assets", "album_cover.jpg")
+  );
+  res.send();
 });
 
 api.get("/login", (req, res) => {

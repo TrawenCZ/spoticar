@@ -10,7 +10,7 @@ import {
   usePlayerDevice,
   useSpotifyPlayer,
 } from "react-spotify-web-playback-sdk";
-import { putFetcher } from "../utils/fetchers";
+import { postFetcherForExpress, putFetcher } from "../utils/fetchers";
 import { TransferPlaybackRequest } from "../utils/types/spotify-api";
 import Loading from "./LoadingAnimation";
 import { useAlbumCover } from "./providers/AlbumCoverProvider";
@@ -20,7 +20,7 @@ export default function PlaybackController({ token }: { token: string }) {
   const state = usePlaybackState();
   const device = usePlayerDevice();
   const error = useErrorState();
-  const { setAlbumCoverUri } = useAlbumCover();
+  const { setState: setAlbumCoverUri } = useAlbumCover();
 
   useEffect(() => {
     if (!device?.device_id) {
@@ -36,7 +36,18 @@ export default function PlaybackController({ token }: { token: string }) {
     if (!state?.track_window.current_track.album.images[0].url) {
       return;
     }
-    setAlbumCoverUri(state?.track_window.current_track.album.images[0].url);
+    postFetcherForExpress("/album-cover", {
+      url: state?.track_window.current_track.album.images[0].url,
+    }).then((res) => {
+      if (res.success) {
+        setAlbumCoverUri((val) => ({
+          albumCoverIsSet: true,
+          triggerRerender: !val.triggerRerender,
+        }));
+      } else {
+        setAlbumCoverUri({ albumCoverIsSet: false, triggerRerender: false });
+      }
+    });
   }, [state?.track_window.current_track.album.images[0].url]);
 
   if (!player || !state) return <Loading />;
