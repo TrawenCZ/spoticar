@@ -890,17 +890,14 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
   p.setup = async () => {
     p.createCanvas(WIDTH, HEIGHT);
+
+    // create buffer for track
     trackBuffer = p.createGraphics(WIDTH, HEIGHT);
     trackBuffer.background(0, 0, 0, 0);
     trackBuffer.angleMode(p.DEGREES);
-    backgroundBuffer = createBackground(p.createGraphics(WIDTH, HEIGHT));
-    p.image(albumCover, 0, 0, 150, 150);
 
     // create background
-
-    if (!backgroundBuffer) {
-      console.error("Background couldn't be created!");
-    }
+    backgroundBuffer = createBackground(p.createGraphics(WIDTH, HEIGHT));
 
     // generate the track skeleton
     const points = random_points();

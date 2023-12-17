@@ -18,8 +18,7 @@ class SketchBody extends React.Component {
     console.log("sem tu????????????");
     this.myRef = React.createRef();
   }
-  Sketch = (p: p5) =>
-    audioRacingP5Sketch(p, "http://localhost:3000/assets/album_cover.jpg");
+  Sketch = audioRacingP5Sketch;
 
   // Sketch = (p: p5) => {
   //   let audioInput: p5.AudioIn;
