@@ -14,9 +14,15 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     [];
   let estimatedNumberOfPointsInContainedInWidthValue: number = 0;
   let trackPoints: Point[];
-  let carRaceStats: { alteredColor: number[]; car: Car }[];
+  let carRaceStats: {
+    alteredColor: number[];
+    energyGain: number;
+    boosted: number;
+    drawIndex: number;
+    car: Car;
+  }[];
   let audioInput: p5.AudioIn;
-  const fft = new p5.FFT(0.8, 512);
+  const fft = new p5.FFT();
 
   let audioRacingIcon: p5.Image;
   let albumCover: p5.Image;
@@ -29,6 +35,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     "treble",
     "bass",
   ];
+  const bassFreqIndex = predefinedFrequencyRanges.indexOf("bass");
 
   let trackBuffer: p5.Graphics;
   let trackObjects: ((
@@ -137,6 +144,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     bestLapTime: number = Infinity;
 
     color: p5.Color;
+    currBoost: number = 0;
 
     constructor(
       position: p5.Vector,
@@ -154,7 +162,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       this.color = color;
     }
 
-    move(audioValue: number, trackPoints: p5.Vector[]) {
+    move(audioValue: number, trackPoints: p5.Vector[], bassBoost: number) {
+      this.currBoost = bassBoost > this.currBoost ? bassBoost : this.currBoost;
       const {
         closestPt,
         closestPtIndexInTrack,
@@ -195,11 +204,13 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         .add(trackHeading.mult(1.2))
         .normalize()
         .rotate(
-          (closestPtDistance / (TRACK_WIDTH / 2)) * 2.5 * trackSidePosition
+          (closestPtDistance / (TRACK_WIDTH / 2)) * 2.8 * trackSidePosition
         );
 
-      const carsInFront = CARS.slice(CARS.indexOf(this) + 1);
-      carsInFront.forEach((carInFront) => {
+      const indexOfThisCar = CARS.indexOf(this);
+      const carInFront: Car | null =
+        indexOfThisCar < CARS.length - 1 ? CARS[indexOfThisCar + 1] : null;
+      if (carInFront) {
         const angleBetweenHeadingAndCarInFront = p.abs(
           this.heading.angleBetween(
             p.createVector(
@@ -216,35 +227,36 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
           const rotationFixer =
             (8 - angleBetweenHeadingAndCarInFront) *
             ((CAR_SIZE.height * 3) / distanceBetweenCars) *
-            -trackSidePosition;
+            trackSidePosition;
 
-          this.heading.rotate(rotationFixer);
+          //this.heading.rotate(rotationFixer);
         }
-        if (
-          distanceBetweenCars <= CAR_SIZE.height &&
-          angleBetweenHeadingAndCarInFront < 40
-        ) {
-          this.velocityNum *=
-            (distanceBetweenCars / CAR_SIZE.height) *
-            carInFront.velocityNum *
-            1.2;
-        }
-      });
+      }
 
-      const maxVelocity = 9;
-      const percentualMaxVelocityReached = this.velocityNum / maxVelocity;
-
+      const maxVelocity = 10;
+      const percentualMaxVelocityReached =
+        this.velocityNum / (maxVelocity * 1.2);
+      bassBoost = 0;
       this.velocityNum *=
-        p.constrain(audioValue / 100, 1, 2) *
-        (1.5 - percentualMaxVelocityReached);
-      this.velocityNum /= p.constrain(
-        (p.abs(diffBetweenHeadings) / 4) * percentualMaxVelocityReached,
-        1,
-        1.5
-      );
-      this.velocityNum = p.constrain(this.velocityNum, 1, maxVelocity);
+        p.constrain(audioValue, 1, 2) * (1.5 - percentualMaxVelocityReached);
+      this.velocityNum /=
+        p.constrain(
+          (p.abs(diffBetweenHeadings) / 4) * percentualMaxVelocityReached,
+          1,
+          1.5
+        ) +
+        percentualMaxVelocityReached * 0.1;
+      this.velocityNum = p.constrain(this.velocityNum, 0.13, 11);
 
-      this.position.add(this.heading.copy().mult(this.velocityNum));
+      this.position.add(
+        this.heading
+          .copy()
+          .mult(
+            this.velocityNum *
+              (this.currBoost > 0 ? 1 + this.currBoost * 0.3 : 1)
+          )
+      );
+      this.currBoost /= 2;
     }
 
     draw(surface: p5) {
@@ -277,6 +289,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   const N_CHECKPOINTS = 10;
 
   const TRACK_WIDTH = 40;
+
+  const BOOST_COLOR = p.color(66, 177, 216);
 
   const drawFinishLineGraphics = (surface: p5.Graphics) => {
     const numOfFinishLineSquares = 6;
@@ -761,17 +775,23 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
   const drawRaceStatsTable = (
     surface: p5,
-    carsForFaceStats: { alteredColor: number[]; car: Car }[],
+    carsForFaceStats: {
+      alteredColor: number[];
+      energyGain: number;
+      boosted: number;
+      drawIndex: number;
+      car: Car;
+    }[],
     size: { width: number; height: number },
     position: Point
   ) => {
-    const partWidth = size.width / (carsForFaceStats.length + 0.55);
+    const partWidth = size.width / (carsForFaceStats.length + 0.5);
     surface.push();
     shadow(surface);
     surface.noStroke();
 
     // table background
-    surface.fill(0, 0, 0, 100);
+    surface.fill(0, 0, 0, 60);
     surface.rect(position.x, position.y, size.width, size.height);
     noShadow(surface);
 
@@ -780,30 +800,58 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       audioRacingIcon,
       position.x,
       position.y,
-      partWidth * 0.55,
+      partWidth * 0.5,
       size.height
     );
 
     const carStatSize = {
       width: partWidth - partWidth / 6,
+      widthPart: (partWidth - partWidth / 6) / 6,
       height: size.height - partWidth / 6,
       widthOffset: partWidth / 12,
       heightOffset: partWidth / 12,
     };
 
     for (let i = 0; i < carsForFaceStats.length; i++) {
-      const carStats = carsForFaceStats[i];
+      const carStats = carsForFaceStats.find(
+        (carStats) => carStats.drawIndex === i
+      )!;
       const partPosition = {
-        x: position.x + carStatSize.widthOffset + partWidth * (i + 0.55),
+        x: position.x + carStatSize.widthOffset + partWidth * (i + 0.5),
         y: position.y + carStatSize.heightOffset,
       };
-      surface.fill(carStats.alteredColor);
+
+      surface.stroke(255);
+      surface.strokeWeight(1.5);
+      surface.noFill();
       surface.rect(
         partPosition.x,
         partPosition.y,
         carStatSize.width,
         carStatSize.height
       );
+
+      const basicEnergy =
+        carStatSize.widthPart +
+        (p.constrain(carStats.energyGain, 0, 255) / 255) *
+          carStatSize.widthPart *
+          4;
+      surface.noStroke();
+      surface.fill(carStats.alteredColor);
+      surface.rect(
+        partPosition.x,
+        partPosition.y,
+        basicEnergy,
+        carStatSize.height
+      );
+      surface.fill(BOOST_COLOR);
+      surface.rect(
+        partPosition.x + basicEnergy,
+        partPosition.y,
+        (carStats.boosted / 60) * carStatSize.widthPart,
+        carStatSize.height
+      );
+      carStats.boosted = carStats.boosted > 0 ? carStats.boosted - 1 : 0;
       surface.fill(
         carStats.alteredColor[0] > 170 &&
           carStats.alteredColor[1] > 170 &&
@@ -815,13 +863,15 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       surface.textAlign(p.CENTER, p.CENTER);
       surface.textFont("Calibri");
       surface.text(
-        `${i + 1}. Lap: ${carStats.car.lapCount} ${
+        `${carsForFaceStats.indexOf(carStats) + 1}. Lap: ${
+          carStats.car.lapCount
+        } ${
           carStats.car.bestLapTime !== Infinity
             ? ` - Best: ${(carStats.car.bestLapTime / 1000).toFixed(3)}s`
             : ""
         }`,
         partPosition.x + carStatSize.width / 2,
-        partPosition.y + carStatSize.height / 2
+        partPosition.y + carStatSize.height / 4
       );
     }
     surface.pop();
@@ -881,7 +931,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       backgroundColor[1] = backgroundColor[1] - diff;
       backgroundColor[2] = backgroundColor[2] - diff;
     }
-    console.log(backgroundColor);
+
     surface.background(backgroundColor);
     const palleteForStrikes = colorPallete.slice(1);
     for (let i = 0; i < numOfStrikes; i++) {
@@ -904,7 +954,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   };
 
   p.preload = () => {
-    audioRacingIcon = p.loadImage("/assets/audio-racing-bg-icon.png");
+    audioRacingIcon = p.loadImage("/assets/spoticar-table-header.png");
     albumCover = p.loadImage("http://localhost:3000/assets/album_cover.jpg");
   };
 
@@ -1060,7 +1110,13 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     carRaceStats = CARS.map((car, index) => {
       const carColorCopy = p.color(car.color);
       // carColorCopy.setAlpha(100);
-      return { alteredColor: palleteForCars[index], car: car };
+      return {
+        alteredColor: palleteForCars[index],
+        energyGain: 0,
+        boosted: 0,
+        drawIndex: index,
+        car: car,
+      };
     });
 
     // creating array for track objects that need to be drawn in every frame at the correct order (mostly because of track overlaping parts)
@@ -1116,7 +1172,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     // const randomFakeSpectrum = Array.from({ length: 31 }, () =>
     //   p.random(0, 255)
     // );
-    const spectrum: number[] = fft.analyze(512);
+    const spectrum: number[] = fft.analyze();
     // const firstNonZeroIndex = spectrum.findIndex((x) => x !== 0);
     // let lastNonZeroIndex;
     // for (let i = spectrum.length - 1; i > 2; i--) {
@@ -1130,6 +1186,9 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     const energyValues = predefinedFrequencyRanges.map((range) =>
       fft.getEnergy(range)
     );
+    const bassBoost = energyValues[bassFreqIndex] / 100;
+    const boostedCarIndex =
+      bassBoost > 2 ? Math.round(p.random(CARS.length)) : -1;
 
     // drawing background
     p.image(backgroundBuffer, 0, 0);
@@ -1141,9 +1200,19 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     trackObjects.forEach((object) => {
       if (object.type === "car") {
         const car = object.car;
+        const audioValue = energyValues[carCounter];
+        const carStats = carRaceStats.find((x) => x.car === car)!;
         p.push();
         p.angleMode(p.DEGREES);
-        car.move(energyValues[carCounter], TRACK_POINT_VECTORS);
+        car.move(
+          audioValue / 100,
+          TRACK_POINT_VECTORS,
+          boostedCarIndex === carCounter ? bassBoost : -1
+        );
+        if (boostedCarIndex === carCounter) {
+          carStats.boosted = 60;
+        }
+        carStats.energyGain = audioValue;
         object.indexInTrack = car.prevClosestPointIndex;
         car.draw(p);
         p.pop();
@@ -1161,6 +1230,16 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
     // keeping cars in seperate array to be able to store their race stats
     CARS.sort((a, b) => a.prevClosestPointIndex - b.prevClosestPointIndex);
+    // for (let i = 0; i < CARS.length; i++) {
+    //   for (let j = 0; j < CARS.length; j++) {
+    //     if (i === j) continue;
+    //     if ((carRaceStats[i].racePosition > carRaceStats[j].racePosition) && (carRaceStats[i].car.lapCount > carRaceStats[j].car.lapCount || (carRaceStats[i].car.lapCount === carRaceStats[j].car.lapCount && carRaceStats[i].car.prevClosestPointIndex > carRaceStats[j].car.prevClosestPointIndex))) {
+    //       const tempPosition = carRaceStats[i].racePosition;
+    //       carRaceStats[i].racePosition = carRaceStats[j].racePosition
+    //       carRaceStats[j].racePosition = tempPosition;
+    //     }
+    //   }
+    // }
     carRaceStats.sort((a, b) =>
       a.car.lapCount - b.car.lapCount === 0
         ? a.car.prevClosestPointIndex - b.car.prevClosestPointIndex
@@ -1169,7 +1248,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     drawRaceStatsTable(
       p,
       carRaceStats,
-      { width: (CARS.length + 0.55) * 250, height: 80 },
+      { width: (CARS.length + 0.5) * 250, height: 80 },
       { x: 0, y: HEIGHT - 80 }
     );
     trackObjects.sort((a, b) => a.indexInTrack - b.indexInTrack);

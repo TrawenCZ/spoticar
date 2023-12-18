@@ -32,9 +32,9 @@ export default function NavBar() {
           }`}
         >
           <img
-            src="/assets/audio-racing-title.png"
+            src="/assets/spoticar-logo-w.png"
             alt="Audio Racing"
-            className="mt-4 ml-6 h-20"
+            className="ml-6 h-20"
           />
           {authenticated && (
             <>
