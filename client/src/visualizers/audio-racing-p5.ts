@@ -14,13 +14,23 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     [];
   let estimatedNumberOfPointsInContainedInWidthValue: number = 0;
   let trackPoints: Point[];
-  let carRaceStats: {
+
+  type CarStats = {
     alteredColor: number[];
     energyGain: number;
+    energyStatus: number;
     boosted: number;
     drawIndex: number;
     car: Car;
   }[];
+
+  const carColors = [
+    p.color("#a2448d"),
+    p.color("#44a259"),
+    p.color("#33768c"),
+  ];
+
+  let carRaceStats: CarStats;
   let audioInput: p5.AudioIn;
   const fft = new p5.FFT();
 
@@ -136,7 +146,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     audioIntervalSize: number;
     carImage: p5.Graphics;
 
-    velocityNum: number = 0.5;
+    velocityNum: number;
     prevClosestPointIndex: number = 0;
 
     lapCount: number = 0;
@@ -150,7 +160,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       position: p5.Vector,
       heading: p5.Vector,
       audioFrequencyIntervalAssign: { low: number; high: number },
-      color: p5.Color
+      color: p5.Color,
+      initVelocity: number
     ) {
       this.position = position;
       this.heading = heading.normalize();
@@ -160,6 +171,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         this.audioFrequencyIntervalAssign.low;
       this.carImage = createCarImage(color);
       this.color = color;
+      this.velocityNum = initVelocity;
     }
 
     move(audioValue: number, trackPoints: p5.Vector[], bassBoost: number) {
@@ -201,59 +213,69 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       );
 
       this.heading
-        .add(trackHeading.mult(1.2))
+        .add(trackHeading.mult(1.7))
         .normalize()
         .rotate(
-          (closestPtDistance / (TRACK_WIDTH / 2)) * 2.8 * trackSidePosition
+          (closestPtDistance / (TRACK_WIDTH / 2)) * 3.2 * trackSidePosition
         );
 
       const indexOfThisCar = CARS.indexOf(this);
       const carInFront: Car | null =
         indexOfThisCar < CARS.length - 1 ? CARS[indexOfThisCar + 1] : null;
       if (carInFront) {
-        const angleBetweenHeadingAndCarInFront = p.abs(
-          this.heading.angleBetween(
-            p.createVector(
-              carInFront.position.x - this.position.x,
-              carInFront.position.y - this.position.y
-            )
+        const angleBetweenHeadingAndCarInFront = this.heading.angleBetween(
+          p.createVector(
+            carInFront.position.x - this.position.x,
+            carInFront.position.y - this.position.y
           )
         );
+        const absAngleBetweenHeadingAndCarInFront = p.abs(
+          angleBetweenHeadingAndCarInFront
+        );
         const distanceBetweenCars = this.position.dist(carInFront.position);
+        if (distanceBetweenCars < CAR_SIZE.height * 1.1) {
+          //this.velocityNum /= 1.08;
+        }
         if (
           distanceBetweenCars < CAR_SIZE.height * 3 &&
-          angleBetweenHeadingAndCarInFront < 8
+          absAngleBetweenHeadingAndCarInFront < 9
         ) {
           const rotationFixer =
-            (8 - angleBetweenHeadingAndCarInFront) *
+            (9 - absAngleBetweenHeadingAndCarInFront) *
             ((CAR_SIZE.height * 3) / distanceBetweenCars) *
-            trackSidePosition;
-
-          //this.heading.rotate(rotationFixer);
+            (angleBetweenHeadingAndCarInFront > 0 ? 1 : -1);
+          this.heading.rotate(rotationFixer);
         }
       }
 
-      const maxVelocity = 10;
-      const percentualMaxVelocityReached =
-        this.velocityNum / (maxVelocity * 1.2);
-      bassBoost = 0;
+      const maxVelocity = 8.5;
+      const percentualMaxVelocityReached = this.velocityNum / maxVelocity;
+
       this.velocityNum *=
-        p.constrain(audioValue, 1, 2) * (1.5 - percentualMaxVelocityReached);
-      this.velocityNum /=
-        p.constrain(
-          (p.abs(diffBetweenHeadings) / 4) * percentualMaxVelocityReached,
-          1,
-          1.5
-        ) +
-        percentualMaxVelocityReached * 0.1;
-      this.velocityNum = p.constrain(this.velocityNum, 0.13, 11);
+        p.constrain(audioValue * 1.2, 1, 2.2) *
+        (1.4 - percentualMaxVelocityReached);
+      // this.velocityNum /=
+      //   p.constrain(
+      //     (p.abs(diffBetweenHeadings) / 6) * percentualMaxVelocityReached * 0.8,
+      //     1,
+      //     1.2
+      //   ) +
+      //   percentualMaxVelocityReached * 0.05;
+
+      this.velocityNum /= p.constrain(
+        1 + percentualMaxVelocityReached * 0.2,
+        1,
+        1.08
+      );
+
+      this.velocityNum = p.constrain(this.velocityNum, 0.35, maxVelocity);
 
       this.position.add(
         this.heading
           .copy()
           .mult(
             this.velocityNum *
-              (this.currBoost > 0 ? 1 + this.currBoost * 0.3 : 1)
+              (this.currBoost > 0 ? 1 + this.currBoost * 0.7 : 1)
           )
       );
       this.currBoost /= 2;
@@ -270,27 +292,25 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   const CARS: Car[] = [];
   let TRACK_POINT_VECTORS: p5.Vector[];
 
-  const MIN_POINTS = 25;
-  const MAX_POINTS = 35;
-  const MARGIN = 120;
+  const MIN_POINTS = 30;
+  const MAX_POINTS = 40;
+  const MARGIN = 125;
   const MIN_DISTANCE = 110;
   const WIDTH = p.windowWidth;
   const HEIGHT = p.windowHeight;
 
   let kerbColorToggler = true;
 
-  const MAX_ANGLE = 90;
+  const MAX_ANGLE = 80;
 
   const DIFFICULTY = 0.1;
   const MAX_DISPLACEMENT = 80;
 
   const SPLINE_POINTS_COUNT = 1000;
 
-  const N_CHECKPOINTS = 10;
-
   const TRACK_WIDTH = 40;
 
-  const BOOST_COLOR = p.color(66, 177, 216);
+  const BOOST_COLOR = p.color(255, 255, 255, 80);
 
   const drawFinishLineGraphics = (surface: p5.Graphics) => {
     const numOfFinishLineSquares = 6;
@@ -313,7 +333,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     p.createGraphics(TRACK_WIDTH, TRACK_WIDTH / (6 / 2))
   );
 
-  const TRACK_ASPHALT_COLOR = p.color(50, 48, 42);
+  const TRACK_ASPHALT_COLOR = p.color(60, 57, 50);
   const TRACK_SAND_COLOR = p.color(255, 222, 153);
   const gravelWidth = TRACK_WIDTH + TRACK_WIDTH / 8;
   const GRAVEL_OFFSET =
@@ -775,13 +795,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
   const drawRaceStatsTable = (
     surface: p5,
-    carsForFaceStats: {
-      alteredColor: number[];
-      energyGain: number;
-      boosted: number;
-      drawIndex: number;
-      car: Car;
-    }[],
+    carsForFaceStats: CarStats,
     size: { width: number; height: number },
     position: Point
   ) => {
@@ -859,6 +873,9 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
           ? p.color(0, 0, 0)
           : p.color(255, 255, 255)
       );
+
+      carStats.energyGain /= 1.2;
+
       surface.textSize(carStatSize.height / 3);
       surface.textAlign(p.CENTER, p.CENTER);
       surface.textFont("Calibri");
@@ -938,7 +955,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       surface.push();
       surface.stroke(p.random(palleteForStrikes));
 
-      surface.strokeWeight(p.random(1, 4));
+      surface.strokeWeight(p.random(1, 8));
       const lineLength = -p.random(30, 350);
       const noiseVal = p.noise(i / 3);
       const noiseVal2 = p.noise(i / 4 + 100);
@@ -977,7 +994,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
     const convexHullRaw = hull(
       points.map((point) => [point.x, point.y]),
-      420
+      440
     ) as number[][];
 
     const convexHull = shape_track(
@@ -1102,17 +1119,26 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
           carInitPositions[i].position,
           carInitPositions[i].heading,
           { low: i * 10, high: (i + 1) * 10 },
-          p.color(palleteForCars[i])
+          carColors[i],
+          i + 1.5
         )
       );
     }
 
     carRaceStats = CARS.map((car, index) => {
-      const carColorCopy = p.color(car.color);
+      const carColorCopyToArray = p
+        .color(car.color)
+        .toString()
+        .replace("rgba(", "")
+        .replace(")", "")
+        .split(",")
+        .map((x) => +x);
       // carColorCopy.setAlpha(100);
+      carColorCopyToArray[3] = 255;
       return {
-        alteredColor: palleteForCars[index],
+        alteredColor: carColorCopyToArray,
         energyGain: 0,
+        energyStatus: 0,
         boosted: 0,
         drawIndex: index,
         car: car,
@@ -1186,9 +1212,9 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     const energyValues = predefinedFrequencyRanges.map((range) =>
       fft.getEnergy(range)
     );
-    const bassBoost = energyValues[bassFreqIndex] / 100;
+    const bassBoost = energyValues[bassFreqIndex] / 200;
     const boostedCarIndex =
-      bassBoost > 2 ? Math.round(p.random(CARS.length)) : -1;
+      bassBoost > 1 ? Math.round(p.random(CARS.length)) : -1;
 
     // drawing background
     p.image(backgroundBuffer, 0, 0);
@@ -1205,14 +1231,20 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         p.push();
         p.angleMode(p.DEGREES);
         car.move(
-          audioValue / 100,
+          1 + audioValue / 255,
           TRACK_POINT_VECTORS,
           boostedCarIndex === carCounter ? bassBoost : -1
         );
         if (boostedCarIndex === carCounter) {
           carStats.boosted = 60;
         }
-        carStats.energyGain = audioValue;
+        carStats.energyGain = p.constrain(
+          carStats.energyGain +
+            (audioValue * 10) /
+              (carStats.energyGain === 0 ? 1 : carStats.energyGain),
+          0,
+          255
+        );
         object.indexInTrack = car.prevClosestPointIndex;
         car.draw(p);
         p.pop();

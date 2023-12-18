@@ -51,7 +51,7 @@ export default function NavBar() {
 
         {(authenticated || !show) && (
           <button
-            className={`btn btn-ghost place-self-center ${
+            className={`btn btn-ghost place-self-center bg-base-100 bg-opacity-10 rounded-md ${
               !show ? "animate-bounce" : ""
             }`}
             onClick={() => setShow((val) => !val)}

@@ -66,7 +66,7 @@ export default function PlaybackController({ token }: { token: string }) {
         </div>
       )}
       {!error && (
-        <div className="card card-side bg-base-200 shadow-xl ml-5 max-h-[7.5rem] bg-opacity-50">
+        <div className="card card-side bg-base-200 shadow-xl ml-5 max-h-[7.5rem] bg-opacity-50 rounded-lg">
           <figure className="max-h-full aspect-square max-w-[7.5rem]">
             <img
               src={state.track_window.current_track.album.images[0].url}

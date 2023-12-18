@@ -96,14 +96,19 @@ export default function SongFinder() {
       `}
       >
         <label className="form-control w-full" tabIndex={0}>
-          <div className="label">
+          <div className="label justify-start">
             <span className="label-text drop-shadow-2xl">
-              Try to search your favorite song on Spotify
+              Try to search your favorite song on{" "}
             </span>
+            <img
+              src="/assets/spotify-logo.png"
+              alt="Spotify Logo"
+              className="h-5 ml-[0.4rem]"
+            />
           </div>
           <input
             type="text"
-            placeholder="Type here"
+            placeholder="Song name, artist, album, whatever..."
             className="input input-bordered w-full opacity-50"
             onChange={(e) => {
               setSearchValue(e.target.value);
