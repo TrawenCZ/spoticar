@@ -34,7 +34,7 @@ function App() {
         rerenderToggler && (
           <div className="fixed left-0 top-0">
             {" "}
-            <SketchBody />
+            <SketchBody url={albumCoverIsSet.url} />
           </div>
         )}
       {userInteractedWithPage &&
@@ -42,7 +42,7 @@ function App() {
         !rerenderToggler && (
           <div className="fixed left-0 top-0">
             {" "}
-            <SketchBody />
+            <SketchBody url={albumCoverIsSet.url} />
           </div>
         )}
     </div>

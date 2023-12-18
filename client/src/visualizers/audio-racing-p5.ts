@@ -955,7 +955,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
   p.preload = () => {
     audioRacingIcon = p.loadImage("/assets/spoticar-table-header.png");
-    albumCover = p.loadImage("http://localhost:3000/assets/album_cover.jpg");
+    albumCover = p.loadImage(albumCoverUri);
   };
 
   p.setup = async () => {

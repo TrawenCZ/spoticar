@@ -12,20 +12,40 @@ import * as stream from "stream";
 import { promisify } from "util";
 
 const finished = promisify(stream.finished);
-async function downloadFile(
-  fileUrl: string,
-  outputLocationPath: string
-): Promise<any> {
-  const writer = createWriteStream(outputLocationPath);
-  return axios({
-    method: "get",
-    url: fileUrl,
-    responseType: "stream",
-  }).then((response) => {
-    response.data.pipe(writer);
-    return finished(writer); //this is a Promise
-  });
-}
+// async function downloadFile(
+//   fileUrl: string,
+//   outputLocationPath: string
+// ): Promise<any> {
+//   const writer = createWriteStream(outputLocationPath);
+//   return axios({
+//     method: "get",
+//     url: fileUrl,
+//     responseType: "stream",
+//   }).then((response) => {
+//     response.data.pipe(writer);
+//     return finished(writer); //this is a Promise
+//   });
+// }
+
+const downloadFile = async (fileUrl: string, localFilePath: string) => {
+  // Get the file name
+
+  try {
+    const response = await axios({
+      method: "GET",
+      url: fileUrl,
+      responseType: "stream",
+    });
+
+    const w = response.data.pipe(createWriteStream(localFilePath));
+
+    await finished(w);
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
 
 dotenv.config();
 assert(process.env.CLIENT_ID, "CLIENT_ID is not defined");
@@ -61,6 +81,10 @@ let imageData: any = "javascript je chujovina";
 
 const api = express();
 
+api.use(express.json());
+
+api.use(cors());
+
 api.use(function (req, res, next) {
   if (req.path.slice(-1) === "/" && req.path.length > 1) {
     let query = req.url.slice(req.path.length);
@@ -70,16 +94,18 @@ api.use(function (req, res, next) {
   }
 });
 
-api.use(express.json());
-
-api.use(cors());
-
 api.post("/album-cover", async (req, res) => {
+  console.log("tu");
   const { url }: { url: string } = req.body;
-  await downloadFile(
-    url,
-    path.join(__dirname, "..", "assets", "album_cover.jpg")
-  );
+  if (
+    !(await downloadFile(
+      url,
+      path.join(__dirname, "..", "assets", "album_cover.jpg")
+    ))
+  ) {
+    return res.status(404).send();
+  }
+  console.log("ok");
   res.send();
 });
 

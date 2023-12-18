@@ -9,15 +9,17 @@ import React from "react";
 // prettier-ignore
 import { audioRacingP5Sketch } from "../visualizers/audio-racing-p5";
 
-class SketchBody extends React.Component {
+class SketchBody extends React.Component<{ url: string }> {
   myRef: React.RefObject<HTMLDivElement>;
   myP5: p5 | undefined;
+  url: string;
 
-  constructor() {
-    super({});
+  constructor({ url }: { url: string }) {
+    super({ url });
+    this.url = url;
     this.myRef = React.createRef();
   }
-  Sketch = audioRacingP5Sketch;
+  Sketch = (p: p5) => audioRacingP5Sketch(p, this.url);
 
   // React things to make p5.js work properly and not lag when leaving the current page below
   componentDidMount() {
