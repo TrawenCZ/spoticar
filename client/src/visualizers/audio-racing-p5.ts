@@ -278,7 +278,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
               (this.currBoost > 0 ? 1 + this.currBoost * 0.7 : 1)
           )
       );
-      this.currBoost /= 2;
+      this.currBoost /= 1.5;
     }
 
     draw(surface: p5) {
