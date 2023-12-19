@@ -161,6 +161,7 @@ api.get("/callback", async (req, res) => {
       grant_type: "authorization_code",
     }),
   });
+  console.log("AT:", access_token);
   if (!access_token || !refresh_token) {
     return res.status(404).redirect(
       "/#" +

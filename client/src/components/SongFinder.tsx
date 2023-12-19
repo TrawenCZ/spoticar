@@ -20,11 +20,8 @@ export default function SongFinder() {
   useEffect(() => {
     if (trigger) {
       const interval = setInterval(() => {
-        setSearchResults(null);
-        setAddingToQueue({ status: "idle", trackUri: null });
-        setSearchValue("");
         setTrigger(false);
-      }, 2500);
+      }, 2100);
       return () => clearInterval(interval);
     }
   }, [trigger]);
@@ -82,6 +79,9 @@ export default function SongFinder() {
           trackUri: addingToQueue.trackUri,
         });
       }
+      setSearchResults(null);
+      setAddingToQueue({ status: "idle", trackUri: null });
+      setSearchValue("");
       setTrigger(true);
     });
   }, [addingToQueue]);

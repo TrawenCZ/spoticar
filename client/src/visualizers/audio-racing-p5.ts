@@ -252,8 +252,10 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       const percentualMaxVelocityReached = this.velocityNum / maxVelocity;
 
       this.velocityNum *=
-        p.constrain(audioValue * 1.2, 1, 2.2) *
-        (1.4 - percentualMaxVelocityReached);
+        (p.constrain((audioValue + 0.1) ** 2, 1, 3.7) *
+          (1.4 - percentualMaxVelocityReached)) /
+        1.5;
+
       // this.velocityNum /=
       //   p.constrain(
       //     (p.abs(diffBetweenHeadings) / 6) * percentualMaxVelocityReached * 0.8,
@@ -267,8 +269,10 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         1,
         1.08
       );
+      this.velocityNum /= this.audioFrequencyIntervalAssign.low;
 
       this.velocityNum = p.constrain(this.velocityNum, 0.35, maxVelocity);
+      console.log(this.velocityNum);
 
       this.position.add(
         this.heading
@@ -1118,12 +1122,20 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       70 + colorDividers[2] * colorMultiplier,
     ]);
 
+    const randomOffsetToSlowDown = Math.round(p.random(0, 3));
+    const secondLessSlowingOffset = (randomOffsetToSlowDown + 1) / 3;
     for (let i = 0; i < 3; i++) {
+      const slowConstant =
+        i === randomOffsetToSlowDown
+          ? 1.24
+          : i === randomOffsetToSlowDown + 1
+          ? 1.4
+          : 1;
       CARS.push(
         new Car(
           carInitPositions[i].position,
           carInitPositions[i].heading,
-          { low: i * 10, high: (i + 1) * 10 },
+          { low: slowConstant, high: (i + 1) * 10 },
           carColors[i],
           i + 1.5
         )
