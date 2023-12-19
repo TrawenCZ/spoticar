@@ -894,6 +894,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     surface.pop();
   };
 
+  // getting dominant colors from album cover
   const getColorPalleteFromImage = (image: p5.Image, numOfColors: number) => {
     const colors: {
       color: [r: number, g: number, b: number];
@@ -901,11 +902,13 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     }[] = [];
     image.loadPixels();
 
+    // iterating over pixels in image with step of 64 to reduce number of iterations
     for (let j = 0; j < image.pixels.length; j += 64) {
       let r = image.pixels[j];
       let g = image.pixels[j + 1];
       let b = image.pixels[j + 2];
 
+      // grouping similar colors
       let temp = colors.find((element) => {
         return (
           p.abs(element.color[0] - r) < 10 &&
@@ -921,6 +924,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       }
       colors.sort((a, b) => b.amount - a.amount);
     }
+
+    // returning only the most dominant colors
     return colors
       .filter((_, index) => index < numOfColors)
       .map((color) => [color.color[0], color.color[1], color.color[2]]);
