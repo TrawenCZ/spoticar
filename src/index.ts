@@ -54,6 +54,9 @@ assert(process.env.CLIENT_SECRET, "CLIENT_SECRET is not defined");
 const PORT = process.env.PORT || 3000;
 const client_id = process.env.CLIENT_ID!;
 const client_secret = process.env.CLIENT_SECRET!;
+if (!client_id || !client_secret) {
+  throw new Error("CLIENT_ID or CLIENT_SECRET is not defined");
+}
 const redirect_uri =
   process.env.REDIRECT_URI || `http://localhost:${PORT}/callback`;
 
@@ -131,6 +134,7 @@ api.get("/logout", (req, res) => {
 });
 
 api.get("/callback", async (req, res) => {
+  console.log("callbacked");
   const code = req.query.code?.toString();
   const { state } = req.query;
 
@@ -156,7 +160,7 @@ api.get("/callback", async (req, res) => {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     data: querystring.stringify({
-      code,
+      code: code,
       redirect_uri: redirect_uri,
       grant_type: "authorization_code",
     }),

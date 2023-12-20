@@ -252,7 +252,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       const percentualMaxVelocityReached = this.velocityNum / maxVelocity;
 
       this.velocityNum *=
-        (p.constrain((audioValue + 0.1) ** 2, 1, 3.7) *
+        (p.constrain((audioValue + 0.15) ** 2, 1, 3.7) *
           (1.4 - percentualMaxVelocityReached)) /
         1.5;
 
@@ -272,7 +272,6 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       this.velocityNum /= this.audioFrequencyIntervalAssign.low;
 
       this.velocityNum = p.constrain(this.velocityNum, 0.35, maxVelocity);
-      console.log(this.velocityNum);
 
       this.position.add(
         this.heading
@@ -1123,12 +1122,12 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     ]);
 
     const randomOffsetToSlowDown = Math.round(p.random(0, 3));
-    const secondLessSlowingOffset = (randomOffsetToSlowDown + 1) / 3;
+    const secondLessSlowingOffset = (randomOffsetToSlowDown + 1) % 3;
     for (let i = 0; i < 3; i++) {
       const slowConstant =
         i === randomOffsetToSlowDown
           ? 1.24
-          : i === randomOffsetToSlowDown + 1
+          : i === secondLessSlowingOffset
           ? 1.4
           : 1;
       CARS.push(
