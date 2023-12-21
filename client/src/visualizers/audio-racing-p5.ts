@@ -256,14 +256,6 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
           (1.4 - percentualMaxVelocityReached)) /
         1.5;
 
-      // this.velocityNum /=
-      //   p.constrain(
-      //     (p.abs(diffBetweenHeadings) / 6) * percentualMaxVelocityReached * 0.8,
-      //     1,
-      //     1.2
-      //   ) +
-      //   percentualMaxVelocityReached * 0.05;
-
       this.velocityNum /= p.constrain(
         1 + percentualMaxVelocityReached * 0.2,
         1,
@@ -348,11 +340,11 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   const INTERPOLATE_STEP = 1 / (SPLINE_POINTS_COUNT - 1);
   const INTERPOLATE_DEGREE = 3;
 
-  function random_points(
+  function createRandomPoints(
     min = MIN_POINTS,
     max = MAX_POINTS,
     margin = MARGIN,
-    min_distance = MIN_DISTANCE
+    minDistance = MIN_DISTANCE
   ) {
     const pointCount = Math.round(p.random(min, max + 1));
     const points: Point[] = [];
@@ -361,7 +353,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       const y = Math.round(p.random(margin, HEIGHT - margin + 1));
       const distances = points
         .map((pt) => Math.sqrt((pt.x - x) ** 2 + (pt.y - y) ** 2))
-        .filter((x) => x < min_distance);
+        .filter((x) => x < minDistance);
       if (distances.length === 0) {
         points.push({ x, y });
       }
@@ -369,47 +361,45 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     return points;
   }
 
-  function make_rand_vector(dims: number) {
+  function makeRandomVector(dims: number) {
     const vec = Array.from({ length: dims }, () => p.randomGaussian(0, 1));
     const mag = Math.sqrt(vec.reduce((acc, x) => acc + x ** 2, 0));
     return vec.map((x) => x / mag);
   }
 
-  function shape_track(
-    track_points: Point[],
+  function shapeAndFixTrack(
+    trackPoints: Point[],
     difficulty = DIFFICULTY,
-    max_displacement = MAX_DISPLACEMENT,
+    maxDisplacement = MAX_DISPLACEMENT,
     margin = MARGIN / 2
   ) {
-    const track_set: Point[] = Array(track_points.length * 2).fill({
+    const trackSet: Point[] = Array(trackPoints.length * 2).fill({
       x: 0,
       y: 0,
     });
-    for (let i = 0; i < track_points.length; i++) {
-      const displacement = Math.pow(p.random(), difficulty) * max_displacement;
-      const disp = make_rand_vector(2).map((x) => displacement * x);
-      track_set[i * 2] = { x: track_points[i].x, y: track_points[i].y };
-      track_set[i * 2 + 1] = {
+    for (let i = 0; i < trackPoints.length; i++) {
+      const displacement = Math.pow(p.random(), difficulty) * maxDisplacement;
+      const disp = makeRandomVector(2).map((x) => displacement * x);
+      trackSet[i * 2] = { x: trackPoints[i].x, y: trackPoints[i].y };
+      trackSet[i * 2 + 1] = {
         x: Math.round(
-          (track_points[i].x + track_points[(i + 1) % track_points.length].x) /
-            2 +
+          (trackPoints[i].x + trackPoints[(i + 1) % trackPoints.length].x) / 2 +
             disp[0]
         ),
         y: Math.round(
-          (track_points[i].y + track_points[(i + 1) % track_points.length].y) /
-            2 +
+          (trackPoints[i].y + trackPoints[(i + 1) % trackPoints.length].y) / 2 +
             disp[1]
         ),
       };
     }
     for (let i = 0; i < 3; i++) {
-      push_points_apart(track_set);
-      fix_angles(track_set);
+      pushPointsApart(trackSet);
+      fixAngles(trackSet);
     }
 
     // push any point outside screen limits back again
-    const final_set: Point[] = [];
-    for (const point of track_set) {
+    const finalSet: Point[] = [];
+    for (const point of trackSet) {
       if (point.x < margin) {
         point.x = margin;
       } else if (point.x > WIDTH - margin) {
@@ -420,20 +410,18 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       } else if (point.y > HEIGHT - margin) {
         point.y = HEIGHT - margin;
       }
-      final_set.push(point);
+      finalSet.push(point);
     }
-    return final_set;
+    return finalSet;
   }
 
-  function push_points_apart(points: Point[], distance = MIN_DISTANCE) {
-    // distance might need some tweaking
-    const distance2 = distance * distance;
+  function pushPointsApart(points: Point[], distance = MIN_DISTANCE) {
     for (let i = 0; i < points.length; i++) {
       for (let j = i + 1; j < points.length - 1; j++) {
-        const p_distance = Math.sqrt(
+        const pDistance = Math.sqrt(
           (points[i].x - points[j].x) ** 2 + (points[i].y - points[j].y) ** 2
         );
-        if (p_distance < distance) {
+        if (pDistance < distance) {
           const dx = points[j].x - points[i].x;
           const dy = points[j].y - points[i].y;
           const dl = Math.sqrt(dx * dx + dy * dy);
@@ -448,47 +436,43 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     return points;
   }
 
-  function fix_angles(points: Point[], max_angle = MAX_ANGLE) {
+  function fixAngles(points: Point[], maxAngle = MAX_ANGLE) {
     for (let i = 0; i < points.length; i++) {
-      const prev_point = i > 0 ? i - 1 : points.length - 1;
-      const next_point = (i + 1) % points.length;
-      let px = points[i].x - points[prev_point].x;
-      let py = points[i].y - points[prev_point].y;
+      const prevPoint = i > 0 ? i - 1 : points.length - 1;
+      const nextPoint = (i + 1) % points.length;
+      let px = points[i].x - points[prevPoint].x;
+      let py = points[i].y - points[prevPoint].y;
       const pl = Math.sqrt(px * px + py * py);
       px /= pl;
       py /= pl;
-      let nx = -(points[i].x - points[next_point].x);
-      let ny = -(points[i].y - points[next_point].y);
+      let nx = -(points[i].x - points[nextPoint].x);
+      let ny = -(points[i].y - points[nextPoint].y);
       const nl = Math.sqrt(nx * nx + ny * ny);
       nx /= nl;
       ny /= nl;
       const a = Math.atan2(px * ny - py * nx, px * nx + py * ny);
-      if (Math.abs(p.degrees(a)) <= max_angle) {
+      if (Math.abs(p.degrees(a)) <= maxAngle) {
         continue;
       }
-      const diff = p.radians(max_angle * Math.sign(a)) - a;
+      const diff = p.radians(maxAngle * Math.sign(a)) - a;
       const c = Math.cos(diff);
       const s = Math.sin(diff);
-      const new_x = (nx * c - ny * s) * nl;
-      const new_y = (nx * s + ny * c) * nl;
-      points[next_point].x = Math.round(points[i].x + new_x);
-      points[next_point].y = Math.round(points[i].y + new_y);
+      const newX = (nx * c - ny * s) * nl;
+      const newY = (nx * s + ny * c) * nl;
+      points[nextPoint].x = Math.round(points[i].x + newX);
+      points[nextPoint].y = Math.round(points[i].y + newY);
     }
     return points;
   }
 
-  function smooth_track(
-    track_points: Point[],
-    interpolateStep = INTERPOLATE_STEP,
-    splinePointsCount = SPLINE_POINTS_COUNT
+  function smoothTrack(
+    trackPoints: Point[],
+    interpolateStep = INTERPOLATE_STEP
   ) {
-    const trackPointsForLoop = track_points
-      .concat(track_points.slice(0, INTERPOLATE_DEGREE + 1))
+    const trackPointsForLoop = trackPoints
+      .concat(trackPoints.slice(0, INTERPOLATE_DEGREE + 1))
       .map((point) => [point.x, point.y]);
     const maxSpline = 1.0 - 1.0 / (trackPointsForLoop.length + 1);
-
-    // fit splines to x=f(u) and y=g(u), treating both as periodic. also note that s=0
-    // is needed in order to force the spline fit to pass through all the input points.
 
     const track: Point[] = [];
     for (let i = 0; i <= maxSpline; i += interpolateStep) {
@@ -499,14 +483,14 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     return track;
   }
 
-  function draw_points(surface: p5, color: p5.Color, points: Point[]) {
+  function drawPoints(surface: p5, color: p5.Color, points: Point[]) {
     for (const point of points) {
       surface.fill(color);
       surface.circle(point.x, point.y, 10);
     }
   }
 
-  function draw_convex_hull(
+  function drawConvexHull(
     convexHull: Point[],
     surface: p5,
     points: Point[],
@@ -566,11 +550,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     );
   }
 
-  function draw_lines_from_points(
-    surface: p5,
-    color: p5.Color,
-    points: Point[]
-  ) {
+  function drawLinesFromPoints(surface: p5, color: p5.Color, points: Point[]) {
     surface.fill(color);
     for (let i = 0; i < points.length - 1; i++) {
       surface.line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
@@ -670,13 +650,13 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     surface: p5,
     fromIndex: number,
     toIndex: number,
-    track_line: Point[]
+    trackLine: Point[]
   ) => {
     kerbColorToggler = true;
     for (let i = fromIndex; i <= toIndex; i++) {
-      const prevPoint = track_line.at(i - 1)!;
-      const currentPoint = track_line[i];
-      const nextPoint = track_line[(i + 1) % track_line.length];
+      const prevPoint = trackLine.at(i - 1)!;
+      const currentPoint = trackLine[i];
+      const nextPoint = trackLine[(i + 1) % trackLine.length];
 
       drawTrackLineRaw(surface, currentPoint, nextPoint, prevPoint);
     }
@@ -737,63 +717,62 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     surface.pop();
   }
 
-  function draw_track(surface: p5, color: p5.Color, points: Point[]) {
+  function drawTrack(surface: p5, points: Point[]) {
     const radius = Math.round(TRACK_WIDTH / 2);
 
-    // inner
     drawTrackLine(surface, points, TRACK_WIDTH);
 
     // get parameterized starting grid image
-    const starting_grid: p5.Graphics = draw_starting_grid(TRACK_WIDTH);
+    const startingGrid: p5.Graphics = drawStartingGrid(TRACK_WIDTH);
 
     // rotate and place starting grid
     const offset = TRACK_POINT_ANGLE_OFFSET;
-    const vec_p = [
+    const vecP = p.createVector(
       points[offset].y - points[0].y,
-      -(points[offset].x - points[0].x),
-    ];
-    const n_vec_p = [
-      vec_p[0] / Math.hypot(vec_p[0], vec_p[1]),
-      vec_p[1] / Math.hypot(vec_p[0], vec_p[1]),
-    ];
+      -(points[offset].x - points[0].x)
+    );
+    const nVecP = p.createVector(
+      vecP.x / Math.hypot(vecP.x, vecP.y),
+      vecP.y / Math.hypot(vecP.x, vecP.y)
+    );
 
     // compute angle
-    const angle = p.degrees(Math.atan2(n_vec_p[1], n_vec_p[0]));
+    const angle = p.degrees(Math.atan2(nVecP.y, nVecP.x));
     surface.push();
-    const start_pos = {
-      x: points[0].x - Math.sign(n_vec_p[0]) * n_vec_p[0] * radius,
-      y: points[0].y - Math.sign(n_vec_p[1]) * n_vec_p[1] * radius,
+    const startPos = {
+      x: points[0].x - Math.sign(nVecP.x) * nVecP.x * radius,
+      y: points[0].y - Math.sign(nVecP.x) * nVecP.y * radius,
     };
-    surface.translate(start_pos.x, start_pos.y);
+    surface.translate(startPos.x, startPos.y);
     surface.rotate(-angle);
-    surface.image(starting_grid, start_pos.x, start_pos.y);
+    surface.image(startingGrid, startPos.x, startPos.y);
     surface.pop();
   }
 
-  function draw_starting_grid(track_width: number) {
-    const tile_height = 5;
-    const tile_width = 5;
-    const grid_tile = p.createGraphics(tile_width, tile_height);
-    grid_tile.background(255);
-    grid_tile.fill(0);
-    grid_tile.rect(
+  function drawStartingGrid(trackWidth: number) {
+    const tileHeight = 5;
+    const tileWidth = 5;
+    const gridTileBuffer = p.createGraphics(tileWidth, tileHeight);
+    gridTileBuffer.background(255);
+    gridTileBuffer.fill(0);
+    gridTileBuffer.rect(
       0,
       0,
-      Math.floor(tile_width / 2),
-      Math.floor(tile_height / 2)
+      Math.floor(tileWidth / 2),
+      Math.floor(tileHeight / 2)
     );
-    grid_tile.rect(
-      Math.floor(tile_width / 2),
-      Math.floor(tile_height / 2),
-      tile_width - Math.floor(tile_width / 2),
-      tile_height - Math.floor(tile_height / 2)
+    gridTileBuffer.rect(
+      Math.floor(tileWidth / 2),
+      Math.floor(tileHeight / 2),
+      tileWidth - Math.floor(tileWidth / 2),
+      tileHeight - Math.floor(tileHeight / 2)
     );
 
-    const starting_grid = p.createGraphics(track_width, tile_height);
-    for (let i = 0; i < track_width / tile_height; i++) {
-      starting_grid.image(grid_tile, i * tile_width, 0);
+    const startingGridBuffer = p.createGraphics(trackWidth, tileHeight);
+    for (let i = 0; i < trackWidth / tileHeight; i++) {
+      startingGridBuffer.image(gridTileBuffer, i * tileWidth, 0);
     }
-    return starting_grid;
+    return startingGridBuffer;
   }
 
   const drawRaceStatsTable = (
@@ -998,14 +977,14 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     backgroundBuffer = surface;
 
     // generate the track skeleton
-    const points = random_points();
+    const points = createRandomPoints();
 
     const convexHullRaw = hull(
       points.map((point) => [point.x, point.y]),
       440
     ) as number[][];
 
-    const convexHull = shape_track(
+    const convexHull = shapeAndFixTrack(
       convexHullRaw.slice(0, convexHullRaw.length - 1).map((point) => ({
         x: point[0],
         y: point[1],
@@ -1013,7 +992,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     );
 
     // smoothening the track from rought skeleton to a nice curve
-    trackPoints = smooth_track(convexHull);
+    trackPoints = smoothTrack(convexHull);
 
     // track points converted to p5 vectors
     TRACK_POINT_VECTORS = trackPoints.map((point) =>
@@ -1031,7 +1010,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     );
 
     // draw the actual track (road, kerbs, starting grid)
-    draw_track(trackBuffer, p.color(50, 48, 42), trackPoints);
+    drawTrack(trackBuffer, trackPoints);
 
     // reducing parts that need to be rerendered only to starting and ending index in track point array
     const reducedOverlapingParts = trackPartsNeededToRerender.reduce(
@@ -1061,11 +1040,11 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     const debug = false;
     if (debug) {
       TRACK_ASPHALT_COLOR.setAlpha(50);
-      draw_points(trackBuffer, p.color(255), points);
-      draw_convex_hull(convexHull, trackBuffer, points, p.color(255, 0, 0));
-      draw_points(trackBuffer, p.color(0, 0, 255), convexHull);
-      draw_lines_from_points(trackBuffer, p.color(0, 0, 255), convexHull);
-      draw_points(trackBuffer, p.color(0), trackPoints);
+      drawPoints(trackBuffer, p.color(255), points);
+      drawConvexHull(convexHull, trackBuffer, points, p.color(255, 0, 0));
+      drawPoints(trackBuffer, p.color(0, 0, 255), convexHull);
+      drawLinesFromPoints(trackBuffer, p.color(0, 0, 255), convexHull);
+      drawPoints(trackBuffer, p.color(0), trackPoints);
     }
 
     // creating race cars with their initial state
@@ -1090,8 +1069,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
       };
     }
 
-    const colorHelper = (color: number) =>
-      color > 110 ? color - 70 : color + 70;
+    // const colorHelper = (color: number) =>
+    //   color > 110 ? color - 70 : color + 70;
 
     // const palleteForCars = colorPalleteFromAlbumCover.map((color, index) => {
     //   for (let i = 0; i < colorPalleteFromAlbumCover.length; i++) {
@@ -1110,16 +1089,16 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     // });
 
     const partDivider = 255 + 70;
-    const colorDividers = [
-      colorPalleteFromAlbumCover[0][0] / partDivider,
-      colorPalleteFromAlbumCover[0][1] / partDivider,
-      colorPalleteFromAlbumCover[0][2] / partDivider,
-    ];
-    const palleteForCars = [15, 140, 210].map((colorMultiplier) => [
-      70 + colorDividers[0] * colorMultiplier,
-      70 + colorDividers[1] * colorMultiplier,
-      70 + colorDividers[2] * colorMultiplier,
-    ]);
+    // const colorDividers = [
+    //   colorPalleteFromAlbumCover[0][0] / partDivider,
+    //   colorPalleteFromAlbumCover[0][1] / partDivider,
+    //   colorPalleteFromAlbumCover[0][2] / partDivider,
+    // ];
+    // const palleteForCars = [15, 140, 210].map((colorMultiplier) => [
+    //   70 + colorDividers[0] * colorMultiplier,
+    //   70 + colorDividers[1] * colorMultiplier,
+    //   70 + colorDividers[2] * colorMultiplier,
+    // ]);
 
     const randomOffsetToSlowDown = Math.round(p.random(0, 3));
     const secondLessSlowingOffset = (randomOffsetToSlowDown + 1) % 3;
@@ -1211,20 +1190,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
   };
 
   p.draw = () => {
-    // const randomFakeSpectrum = Array.from({ length: 31 }, () =>
-    //   p.random(0, 255)
-    // );
-    const spectrum: number[] = fft.analyze();
-    // const firstNonZeroIndex = spectrum.findIndex((x) => x !== 0);
-    // let lastNonZeroIndex;
-    // for (let i = spectrum.length - 1; i > 2; i--) {
-    //   if (spectrum.at(i) !== 0) {
-    //     lastNonZeroIndex = i + 1;
-    //     break;
-    //   }
-    // }
-    // const audioSpectrum = spectrum.slice(firstNonZeroIndex, lastNonZeroIndex);
-    // const audioPartSize = Math.floor(audioSpectrum.length / CARS.length);
+    fft.analyze();
     const energyValues = predefinedFrequencyRanges.map((range) =>
       fft.getEnergy(range)
     );
@@ -1234,7 +1200,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
     // drawing background
     p.image(backgroundBuffer, 0, 0);
-    // placing generated track
+    // placing pre-generated track
     p.image(trackBuffer, 0, 0);
 
     // rendering track objects
@@ -1266,6 +1232,8 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         p.pop();
         carCounter++;
       }
+
+      // if the type is trackOverlap, I rerender it in correct order with the cars
       if (object.type === "trackOverlap") {
         rerenderTrackPart(
           p,
@@ -1278,20 +1246,10 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
     // keeping cars in seperate array to be able to store their race stats
     CARS.sort((a, b) => a.prevClosestPointIndex - b.prevClosestPointIndex);
-    // for (let i = 0; i < CARS.length; i++) {
-    //   for (let j = 0; j < CARS.length; j++) {
-    //     if (i === j) continue;
-    //     if ((carRaceStats[i].racePosition > carRaceStats[j].racePosition) && (carRaceStats[i].car.lapCount > carRaceStats[j].car.lapCount || (carRaceStats[i].car.lapCount === carRaceStats[j].car.lapCount && carRaceStats[i].car.prevClosestPointIndex > carRaceStats[j].car.prevClosestPointIndex))) {
-    //       const tempPosition = carRaceStats[i].racePosition;
-    //       carRaceStats[i].racePosition = carRaceStats[j].racePosition
-    //       carRaceStats[j].racePosition = tempPosition;
-    //     }
-    //   }
-    // }
     carRaceStats.sort((a, b) =>
       a.car.lapCount - b.car.lapCount === 0
-        ? a.car.prevClosestPointIndex - b.car.prevClosestPointIndex
-        : a.car.lapCount - b.car.lapCount
+        ? b.car.prevClosestPointIndex - a.car.prevClosestPointIndex
+        : b.car.lapCount - a.car.lapCount
     );
     drawRaceStatsTable(
       p,

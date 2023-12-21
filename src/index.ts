@@ -12,20 +12,6 @@ import * as stream from "stream";
 import { promisify } from "util";
 
 const finished = promisify(stream.finished);
-// async function downloadFile(
-//   fileUrl: string,
-//   outputLocationPath: string
-// ): Promise<any> {
-//   const writer = createWriteStream(outputLocationPath);
-//   return axios({
-//     method: "get",
-//     url: fileUrl,
-//     responseType: "stream",
-//   }).then((response) => {
-//     response.data.pipe(writer);
-//     return finished(writer); //this is a Promise
-//   });
-// }
 
 const downloadFile = async (fileUrl: string, localFilePath: string) => {
   // Get the file name
@@ -78,7 +64,7 @@ let curr_session: {
 
 let curr_refresh_token: string | null = null;
 let curr_state: string | null = null;
-// please don't have a security heart attack, I will only use this app for myself at localhost
+// please don't have a security heart attack, I will only use this app locally
 
 let imageData: any = "javascript je chujovina";
 

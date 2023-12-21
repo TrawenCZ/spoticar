@@ -1,4 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const responseHandler = <T>(
   response: Promise<AxiosResponse<T, any>>
@@ -24,9 +27,6 @@ const responseHandler = <T>(
 
 const domainAdder = (urlSlug: string) =>
   `https://api.spotify.com/v1${urlSlug.startsWith("/") ? "" : "/"}${urlSlug}`;
-
-const expressDomainAdder = (urlSlug: string) =>
-  `http://localhost:3000${urlSlug.startsWith("/") ? "" : "/"}${urlSlug}`;
 
 export const getFetcher = <T>(urlSlug: string, accessToken: string) =>
   responseHandler(
@@ -89,7 +89,7 @@ export const getFetcherForExpress = <T>(
   urlSlug: string
 ): Promise<{ status: "success"; data: T } | { status: "error"; data: any }> => {
   return axios
-    .get<T>(expressDomainAdder(urlSlug))
+    .get<T>(urlSlug)
     .then(
       (res) =>
         ({ status: "success", data: res.data } as {
@@ -109,7 +109,7 @@ export const postFetcherForExpress = <T>(
 ): Promise<{ success: true } | { success: false; err: any }> => {
   return axios
     .post(urlSlug, data)
-    .then((res) => ({ success: true } as { success: true }))
+    .then((_) => ({ success: true } as { success: true }))
     .catch((err) => {
       console.log(err);
       return { success: false, err: err } as { success: false; err: any };
