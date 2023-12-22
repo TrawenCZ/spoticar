@@ -1,7 +1,4 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const responseHandler = <T>(
   response: Promise<AxiosResponse<T, any>>

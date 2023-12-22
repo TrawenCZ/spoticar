@@ -20,6 +20,7 @@ export default function SongFinder() {
   useEffect(() => {
     if (trigger) {
       const interval = setInterval(() => {
+        setAddingToQueue({ status: "idle", trackUri: null });
         setTrigger(false);
       }, 2100);
       return () => clearInterval(interval);
@@ -80,7 +81,6 @@ export default function SongFinder() {
         });
       }
       setSearchResults(null);
-      setAddingToQueue({ status: "idle", trackUri: null });
       setSearchValue("");
       setTrigger(true);
     });

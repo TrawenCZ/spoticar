@@ -265,9 +265,16 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
 
       this.velocityNum = p.constrain(this.velocityNum, 0.35, maxVelocity);
 
+      // heat up tires, make some space between cars
+      this.velocityNum =
+        carInFront && this.lapCount === 0
+          ? carInFront.velocityNum / 1.08
+          : this.velocityNum;
+
       this.position.add(
         this.heading
           .copy()
+          .normalize()
           .mult(
             this.velocityNum *
               (this.currBoost > 0 ? 1 + this.currBoost * 0.7 : 1)
@@ -1088,7 +1095,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
     //   return color;
     // });
 
-    const partDivider = 255 + 70;
+    // const partDivider = 255 + 70;
     // const colorDividers = [
     //   colorPalleteFromAlbumCover[0][0] / partDivider,
     //   colorPalleteFromAlbumCover[0][1] / partDivider,
@@ -1107,7 +1114,7 @@ export const audioRacingP5Sketch = (p: p5, albumCoverUri: string) => {
         i === randomOffsetToSlowDown
           ? 1.24
           : i === secondLessSlowingOffset
-          ? 1.4
+          ? 1.35
           : 1;
       CARS.push(
         new Car(
