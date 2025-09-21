@@ -1,6 +1,10 @@
 # Spoticar
 ### This project was created as the final assignment for the course "Generative Design Programming" at the Masaryk University, Faculty of Informatics, Brno, Czech Republic.
 
+## Trailer
+
+https://github.com/user-attachments/assets/8a2cf5fb-8262-4191-8bb1-f2fe177c4bf8
+
 ## Description
 Spoticar is a web application for visualizing race of cars, that are being synced with audio from Spotify and microphone. Root folder contains backend side, that uses Express.js for providing REST API and serving static files. Frontend side is located in `client` folder and is created using React.js and P5.js, with help of more smaller libraries.
 
